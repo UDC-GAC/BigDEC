@@ -1,0 +1,6 @@
+#!/bin/bash
+
+bin=`dirname "$0"`
+BIGDEC_HOME=`cd "$bin"/..; pwd`
+
+hadoop jar $BIGDEC_HOME/target/bigdec-bin.jar es.udc.gac.bigdec.RunMerge "$@"

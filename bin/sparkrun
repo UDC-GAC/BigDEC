@@ -1,0 +1,41 @@
+#!/bin/bash
+
+bin=`dirname "$0"`
+BIGDEC_HOME=`cd "$bin"/..; pwd`
+
+function help()
+{
+        echo "";
+        echo "Usage: sparkrun --args \"BIGDEC_ARGS\" [SPARK_ARGS]";
+        echo "";
+        exit 127
+}
+
+nargs=$#
+
+while [[ nargs -gt 0 ]]
+ do
+  case "$1" in
+        --args)
+            BIGDEC_ARGS=( "$2" )
+            shift
+		shift
+		nargs=$((nargs-2))
+                ;;
+	*)
+		SPARK_ARGS+=("$1")
+		shift
+		nargs=$((nargs-1))
+		;;
+  esac
+done
+
+if [ -z "$BIGDEC_ARGS" ]; then
+        help
+fi
+
+# Restore positional parameters
+set -- "${SPARK_ARGS[@]}"
+
+echo "spark-submit "$@" --class es.udc.gac.bigdec.RunEC $BIGDEC_HOME/target/bigdec-bin.jar spark ${BIGDEC_ARGS}"
+spark-submit "$@" --class es.udc.gac.bigdec.RunEC $BIGDEC_HOME/target/bigdec-bin.jar spark ${BIGDEC_ARGS}

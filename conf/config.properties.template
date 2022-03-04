@@ -1,0 +1,167 @@
+###################
+# Global options
+###################
+# Comma-separated list of correction algorithms
+# Supported values: MUSKET, BLESS2 and RECKONER
+ALGORITHMS=MUSKET
+
+# Minimum occurrences for solid k-mers. This value is automatically
+# calculated when set to 0
+KMER_THRESHOLD=0
+
+# Whether to force to keep output sequences in the same input order
+KEEP_ORDER=true
+
+# Use multiple threads when merging output files. This setting is only
+# relevant when multiple correction algorithms are executed and/or when
+# correcting paired-end datasets
+MULTITHREAD_MERGE=true
+
+###################
+# SPARK
+###################
+# Spark API
+# Supported values: RDD and Dataset|DS
+SPARK_API=DS
+
+# Store RDD partitions in serialized form when caching data
+# Only significant when SPARK_API=RDD
+SPARK_SERIALIZE_RDD=true
+
+# Whether to compress serialized partitions
+SPARK_COMPRESS_DATA=false
+
+# Codec used to compress broadcast variables, shuffle outputs and
+# data partitions. For the latest, this option is only significant
+# when SPARK_COMPRESS_DATA=true
+# Supported values: lz4, lzf, zstd, snappy
+SPARK_COMPRESSION_CODEC=lz4
+
+# Configure the number of partitions that are created when shuffling data
+# during the k-mer counting step. This option is interpreted on a per-core basis,
+# with a default value that creates one partition per core. It can be
+# beneficial to increase this value up to 2 or 4, depending on the dataset
+SPARK_SHUFFLE_PARTITIONS=1
+
+###################
+# FLINK
+###################
+# Flink API
+# Supported values: Dataset|DS
+FLINK_API=DS
+
+# Enabling the object reuse mode instructs the Flink runtime to reuse
+# user objects for potential better performance
+FLINK_OBJECT_REUSE=true
+
+###################
+# HDFS
+###################
+# Delete intermediate files (if any)
+HDFS_DELETE_TEMP_FILES=false
+
+# HDFS block replication factor for output files
+HDFS_BLOCK_REPLICATION=1
+
+###################
+## MUSKET
+###################
+# Maximum number of correction iterations
+MUSKET_MAX_ITERS=2
+
+# Maximum number of mutations in any region of k-mer length
+MUSKET_MAX_ERRORS=4
+
+# Maximum number of bases that can be trimmed. When 0, trimming
+# is disabled
+MUSKET_MAX_TRIM=0
+
+###################
+# BLESS2
+###################
+## Maximum occurrences for solid k-mers
+BLESS2_MAX_KMER_THRESHOLD=255
+
+# Maximum read extension length
+BLESS2_MAX_EXTEND=5
+
+# Turn trimming on/off
+BLESS2_TRIMMING=false
+
+# Maximum number of bases that can trimmed in a single
+# read, expressed as a ratio of its total length
+BLESS2_MAX_TRIMMING_RATE=0.6
+
+# Maximum number of 'N' bases that can be replaced in a 
+# single read, expressed as a ratio of its total length
+BLESS2_MAX_N_RATIO=0.1
+
+# Base used to replace 'Ns' (or other characters) during
+# the error correction phase
+# Possible values: A, C, G, T
+BLESS2_SUBST_BASE=A
+
+# Advanced options
+BLESS2_PHRED33=33
+BLESS2_PHRED64=64
+BLESS2_QS_CUTOFF_RATIO=0.05
+BLESS2_QS_EXTREMELY_LOW_RATIO=0.01
+BLESS2_CHECK_RANGE_RATIO=0.07
+BLESS2_MIN_BASES_AFTER_TRIMMING=30
+BLESS2_MIN_SOLID_LENGTH=2
+BLESS2_MIN_NON_SOLID_LENGTH=2
+BLESS2_FP_SUSPECT_LENGTH=1
+BLESS2_SOLID_REGION_ADJUST_RANGE=4
+BLESS2_MAX_CANDIDATE_PATHS=74
+BLESS2_INIT_MIN_QS=1000000
+BLESS2_MAX_MODIFICATION=4
+BLESS2_MIN_QS_DIFF=10
+BLESS2_NUM_ALLOWABLE_FAILS=2
+BLESS2_MAX_LOW_QS_BASES=3
+
+###################
+# RECKONER
+###################
+# Maximum occurrences for solid k-mers
+RECKONER_MAX_KMER_THRESHOLD=255
+
+# Maximum read extension length
+RECKONER_MAX_EXTEND=5
+
+# Quality score threshold
+RECKONER_QS_CUTOFF=10
+
+# Maximum number of 'N' bases that can be replaced in a 
+# single read, expressed as a ratio of its total length
+RECKONER_MAX_N_RATIO=0.3
+
+# Maximum number of bases that can be corrected in a
+# single read, expressed as a ratio of its total length
+RECKONER_MAX_ERROR_RATIO=0.5
+
+# Base used to replace 'Ns' (or other characters) during
+# the error correction phase
+# Possible values: A, C, G, T
+RECKONER_SUBST_BASE=A
+
+# Advanced options
+RECKONER_PHRED33=33
+RECKONER_PHRED64=64
+RECKONER_MIN_33_SCORE=33
+RECKONER_MAX_64_SCORE=104
+RECKONER_MAX_DETECT_SCORE_DIFF=5
+RECKONER_MIN_SOLID_LENGTH=2
+RECKONER_MIN_NON_SOLID_LENGTH=2
+RECKONER_FP_SUSPECT_LENGTH=1
+RECKONER_SOLID_REGION_ADJUST_RANGE=4
+RECKONER_MAX_EXTEND_CORRECTION_PATHS=100
+RECKONER_CHECK_MAX_CHANGES=1000
+RECKONER_MAX_FIRST_KMER_POSSIBILITIES=5
+RECKONER_MAX_FIRST_KMER_CORRECTION_PATHS=30
+RECKONER_MAX_LOW_QS_BASES=4
+RECKONER_MAX_LOW_QS_INDEXES_COMB=6
+RECKONER_COVERING_KMERS_WEIGHT=1.0
+RECKONER_EXTENSION_KMERS_WEIGHT=0.5
+RECKONER_MIN_BEST_KMER_QUALITY=0.0
+RECKONER_MAX_CHANGES_IN_REGION_RATIO=0.5
+RECKONER_LIMIT_MODIFICATIONS=false
