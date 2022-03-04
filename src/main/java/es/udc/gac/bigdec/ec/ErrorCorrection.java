@@ -496,8 +496,13 @@ public abstract class ErrorCorrection {
 		// Merge k-mer files
 		try {
 			FileSystem fs = IOUtils.getSrcFS();
-			List<Path> inputFiles = RunMerge.getFiles(fs, getSolidKmersPath(), false);
-			RunMerge.merge(fs, getSolidKmersPath(), inputFiles, fs, getSolidKmersFile(), 3, true, getHadoopConfig());
+
+			if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE && getParallelism() == 1) {
+				fs.rename(getSolidKmersPath(), getSolidKmersFile());
+			} else {
+				List<Path> inputFiles = RunMerge.getFiles(fs, getSolidKmersPath(), false);
+				RunMerge.merge(fs, getSolidKmersPath(), inputFiles, fs, getSolidKmersFile(), 3, true, getHadoopConfig());
+			}
 		} catch (IOException e) {
 			IOUtils.error(e.getMessage());
 		}
