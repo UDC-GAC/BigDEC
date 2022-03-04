@@ -1,0 +1,29 @@
+# Eclipse and java files
+.classpath
+.settings/
+.project
+.metadata
+
+# Virtual machine crash logs
+hs_err_pid*
+
+# Mac OSX files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux files
+*~
+.Trash-*
+
+# Other
+*.fastq
+*.fasta
+*.fq
+*.fa
+target/classes/
+target/maven-archiver/
+target/maven-status/
+target/bigdec-*.*.jar
+target/generated-sources
+/target/
