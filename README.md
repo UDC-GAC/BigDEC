@@ -123,7 +123,6 @@ BigDEC is developed in the [Computer Architecture Group](https://gac.udc.es/engl
 
 * **Roberto R. Expósito** (https://gac.udc.es/~rober)
 * **Jorge González-Domínguez** (https://gac.udc.es/~jgonzalezd)
-* **Juan Touriño** (https://gac.udc.es/~juan)
 
 ## License
 
