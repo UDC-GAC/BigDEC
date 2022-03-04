@@ -147,8 +147,8 @@ public class MUSKET extends CorrectionAlgorithm {
 		int size = sequence.getLength() - getKmerLength();
 		boolean pingComp;
 
-		if (logger.isDebugEnabled())
-			logger.debug("Correcting {}", sequence.basesToString());
+		if (logger.isTraceEnabled())
+			logger.trace("Correcting {}", sequence.basesToString());
 
 		/*String seq = "CAGACGGAGGTTGGGGTGGGGGGGGGGGTAGTCTTGGTTGGTGGGCACNGTGTGGGNGNCNGNNNTTTGGGGGTG";
 		if (!sequence.basesToString(kSize).equals(seq))
@@ -160,9 +160,9 @@ public class MUSKET extends CorrectionAlgorithm {
 			if ((numCorrections = CorrectCoreTwoSides(sequence, corr, bases, lbases, km, rep, lkm, lrep, 
 					kmAux1, kmAux2, solids, getKmerThreshold(), size)) == 0) {
 				// error free
-				if (logger.isDebugEnabled()) {
-					logger.debug("Error free (1)");
-					logger.debug("sequenceMod {}", sequence.basesToString());
+				if (logger.isTraceEnabled()) {
+					logger.trace("Error free (1)");
+					logger.trace("sequenceMod {}", sequence.basesToString());
 				}
 				return sequence;
 			}
@@ -171,7 +171,7 @@ public class MUSKET extends CorrectionAlgorithm {
 				break;
 
 			// Make changes to the input sequence
-			logger.debug("Correction(1): base {}, index {}", corr.getBase(), corr.getIndex());
+			logger.trace("Correction(1): base {}, index {}", corr.getBase(), corr.getIndex());
 			sequence.getBases()[corr.getIndex()] = Kmer.DECODE[corr.getBase()];
 		}
 
@@ -185,9 +185,9 @@ public class MUSKET extends CorrectionAlgorithm {
 				if (CorrectCoreOneSide(sequence, corrections, correctionsAux, bases, km, rep, lkm, lrep, nerr, MAX_ERRORS - nerr + 1, 
 						regions, solids, getKmerThreshold(), size) == true) {
 					// error free
-					if (logger.isDebugEnabled()) {
-						logger.debug("Error free (2)");
-						logger.debug("sequenceMod {}", sequence.basesToString());
+					if (logger.isTraceEnabled()) {
+						logger.trace("Error free (2)");
+						logger.trace("sequenceMod {}", sequence.basesToString());
 					}
 					return sequence;
 				}
@@ -198,7 +198,7 @@ public class MUSKET extends CorrectionAlgorithm {
 				// Make changes to the input sequence
 				for(j = 0; j < corrections.size(); j++) {
 					auxCorr = corrections.get(j);
-					logger.debug("Correction(2): base {}, index {}", auxCorr.getBase(), auxCorr.getIndex());
+					logger.trace("Correction(2): base {}, index {}", auxCorr.getBase(), auxCorr.getIndex());
 					sequence.getBases()[auxCorr.getIndex()] = Kmer.DECODE[auxCorr.getBase()];
 				}
 			}
@@ -208,9 +208,9 @@ public class MUSKET extends CorrectionAlgorithm {
 
 			if (maxVote == 0) {
 				// error free
-				if (logger.isDebugEnabled()) {
-					logger.debug("Error free (3)");
-					logger.debug("sequenceMod {}", sequence.basesToString());
+				if (logger.isTraceEnabled()) {
+					logger.trace("Error free (3)");
+					logger.trace("sequenceMod {}", sequence.basesToString());
 				}
 				return sequence;
 			} else if (maxVote >= minVote) {
@@ -219,7 +219,7 @@ public class MUSKET extends CorrectionAlgorithm {
 				// Make changes to the input sequence
 				for(j = 0; j < corrections.size(); j++) {
 					auxCorr = corrections.get(j);
-					logger.debug("Correction(3): base {}, index {}", auxCorr.getBase(), auxCorr.getIndex());
+					logger.trace("Correction(3): base {}, index {}", auxCorr.getBase(), auxCorr.getIndex());
 					sequence.getBases()[auxCorr.getIndex()] = Kmer.DECODE[auxCorr.getBase()];
 				}
 			}
@@ -230,7 +230,7 @@ public class MUSKET extends CorrectionAlgorithm {
 
 			// Attempt to trim the sequence using the largest k-mer size
 			if (isTrimmable(sequence, km, rep, longestRegion, getKmerThreshold(), size)) {
-				logger.debug("Trimmable");
+				logger.trace("Trimmable");
 
 				int seqLen = longestRegion.getRight() - longestRegion.getLeft();
 
@@ -244,8 +244,8 @@ public class MUSKET extends CorrectionAlgorithm {
 			}
 		}
 
-		if (logger.isDebugEnabled())
-			logger.debug("sequenceMod {}", sequence.basesToString());
+		if (logger.isTraceEnabled())
+			logger.trace("sequenceMod {}", sequence.basesToString());
 
 		return sequence;
 	}
@@ -285,8 +285,8 @@ public class MUSKET extends CorrectionAlgorithm {
 		km.set(seq, 0, kSize);
 		lkm.set(km);
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("CorrectCoreTwoSides");
+		if (logger.isTraceEnabled()) {
+			logger.trace("CorrectCoreTwoSides");
 			logger.trace("km  {}", km.basesToString(kSize));
 			logger.trace("lkm {}", lkm.basesToString(kSize));
 		}
@@ -386,8 +386,8 @@ public class MUSKET extends CorrectionAlgorithm {
 
 		km.set(seq, 0, kSize);
 
-		if (logger.isDebugEnabled())
-			logger.debug("CorrectCoreOneSide: km {}", km.basesToString(kSize));
+		if (logger.isTraceEnabled())
+			logger.trace("CorrectCoreOneSide: km {}", km.basesToString(kSize));
 
 		for (ipos = 0; ipos <= size; ipos++) {
 			if (ipos > 0)
@@ -421,10 +421,10 @@ public class MUSKET extends CorrectionAlgorithm {
 			/* This read is error-free */
 			return true;
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("solids {}", solids.cardinality());
+		if (logger.isTraceEnabled()) {
+			logger.trace("solids {}", solids.cardinality());
 			for(SolidRegion reg: regions)
-				logger.debug(reg.getLeftKmer() + " " + reg.getRightKmer() + " " + (reg.getRightKmer() - reg.getLeftKmer() + 1));
+				logger.trace(reg.getLeftKmer() + " " + reg.getRightKmer() + " " + (reg.getRightKmer() - reg.getLeftKmer() + 1));
 		}
 
 		/* Calculate the minimal number of votes per base */
@@ -437,8 +437,8 @@ public class MUSKET extends CorrectionAlgorithm {
 			/* Form the starting k-mer */
 			km.set(seq, rightKmer, kSize);
 
-			//if (logger.isDebugEnabled())
-			//logger.debug("km: {}, leftKmer: {}, rightKmer: {}", km.basesToString(kSize), leftKmer, rightKmer);
+			//if (logger.isTraceEnabled())
+			//logger.trace("km: {}, leftKmer: {}, rightKmer: {}", km.basesToString(kSize), leftKmer, rightKmer);
 
 			lastPosition = -1;
 			numCorrectionsPerKmer = 0;
@@ -468,9 +468,9 @@ public class MUSKET extends CorrectionAlgorithm {
 						/* Set the last base */
 						km.setBase(base, kSize - 1);
 						done = true;
-						if (logger.isDebugEnabled()) {
-							logger.debug("km: {}", km.basesToString(kSize));
-							logger.debug("base: {}, tpos: {}, multi: {}", base, targetPos, bases.get(0).right);
+						if (logger.isTraceEnabled()) {
+							logger.trace("km: {}", km.basesToString(kSize));
+							logger.trace("base: {}, tpos: {}, multi: {}", base, targetPos, bases.get(0).right);
 						}
 					} else {
 						/* Select the best substitution */
@@ -495,9 +495,9 @@ public class MUSKET extends CorrectionAlgorithm {
 							correctionsAux.add(new Correction((short)targetPos, best.getLeft()));
 							km.setBase(best.getLeft(), kSize - 1);
 							done = true;
-							if (logger.isDebugEnabled()) {
-								logger.debug("km: {}", km.basesToString(kSize));
-								logger.debug("tpos: {}, numBases: {}, best.left: {}, best.right: {}", targetPos, numBases, best.getLeft(), best.getRight());
+							if (logger.isTraceEnabled()) {
+								logger.trace("km: {}", km.basesToString(kSize));
+								logger.trace("tpos: {}, numBases: {}, best.left: {}, best.right: {}", targetPos, numBases, best.getLeft(), best.getRight());
 							}
 						}
 					}
@@ -560,9 +560,9 @@ public class MUSKET extends CorrectionAlgorithm {
 							/* Set the last base */
 							km.setBase(base, 0);
 							done = true;
-							if (logger.isDebugEnabled()) {
-								logger.debug("km: {}", km.basesToString(kSize));
-								logger.debug("base: {}, ipos: {}, multi: {}", base, ipos, bases.get(0).right);
+							if (logger.isTraceEnabled()) {
+								logger.trace("km: {}", km.basesToString(kSize));
+								logger.trace("base: {}, ipos: {}, multi: {}", base, ipos, bases.get(0).right);
 							}
 						} else {
 							/* Select the best substitution */
@@ -586,9 +586,9 @@ public class MUSKET extends CorrectionAlgorithm {
 								correctionsAux.add(new Correction((short)ipos, best.getLeft()));
 								km.setBase(best.getLeft(), 0);
 								done = true;
-								if (logger.isDebugEnabled()) {
-									logger.debug("km: {}", km.basesToString(kSize));
-									logger.debug("ipos: {}, numBases: {}, best.left: {}, best.right: {}", ipos, numBases, best.getLeft(), best.getRight());
+								if (logger.isTraceEnabled()) {
+									logger.trace("km: {}", km.basesToString(kSize));
+									logger.trace("ipos: {}, numBases: {}, best.left: {}, best.right: {}", ipos, numBases, best.getLeft(), best.getRight());
 								}
 							}
 						}
@@ -717,7 +717,7 @@ public class MUSKET extends CorrectionAlgorithm {
 			}
 		}
 
-		logger.debug("maxVote: {}", maxVote);
+		logger.trace("maxVote: {}", maxVote);
 		return maxVote;
 	}
 
@@ -796,9 +796,9 @@ public class MUSKET extends CorrectionAlgorithm {
 		int baseIndex = revcomp ? kSize - 1 - index : index;
 		int originalBase = alternativeKmer.getBase(baseIndex);
 
-		if (logger.isDebugEnabled()) {
+		if (logger.isTraceEnabled()) {
 			logger.trace("km: {}", alternativeKmer.basesToString(kSize));
-			logger.debug("revcomp {}, baseIndex {}", revcomp, baseIndex);
+			logger.trace("revcomp {}, baseIndex {}", revcomp, baseIndex);
 		}
 
 		/* Get all possible alternatives */

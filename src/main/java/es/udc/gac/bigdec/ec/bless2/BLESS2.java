@@ -294,8 +294,8 @@ public class BLESS2 extends CorrectionAlgorithm {
 		if (seqLength > MIN_BASES_AFTER_TRIMMING)
 			maxTrimmedBases = Math.min((int)(seqLength * MAX_TRIMMING_RATE), seqLength - MIN_BASES_AFTER_TRIMMING);
 
-		if (logger.isDebugEnabled())
-			logger.debug("Correcting {}", sequence.basesToString());
+		if (logger.isTraceEnabled())
+			logger.trace("Correcting {}", sequence.basesToString());
 
 		/*String seq = "CAGACGGAGGTTGGGGTGGGGGGGGGGGTAGTCTTGGTTGGTGGGCACNGTGTGGGNGNCNGNNNTTTGGGGGTG";
 		if (!sequence.basesToString().equals(seq))
@@ -306,7 +306,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		numOfNs = CorrectionAlgorithm.replaceNs(sequence, SUBST_BASE);		
 		tooManyNs = numOfNs > maxAllowedNs;
 
-		logger.debug("minCheckLength {}, numberOfNs {}, maxAllowedNs {}, tooManyNs {}, maxTrimmedBases {}", minCheckLength, numOfNs, maxAllowedNs, tooManyNs, maxTrimmedBases);
+		logger.trace("minCheckLength {}, numberOfNs {}, maxAllowedNs {}, tooManyNs {}, maxTrimmedBases {}", minCheckLength, numOfNs, maxAllowedNs, tooManyNs, maxTrimmedBases);
 
 		if (tooManyNs) {
 			// Revert changes
@@ -385,7 +385,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 						}
 					}
 
-					logger.debug("two solid regions, flagShortDistance {}", flagShortDistance);
+					logger.trace("two solid regions, flagShortDistance {}", flagShortDistance);
 
 					if (flagShortDistance == true) {
 						// each solid island
@@ -420,7 +420,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 								}
 							}
 
-							logger.debug("indexPrevLowQualityBase {}, numLowQualityBase {}", indexPrevLowQualityBase, numLowQualityBase);
+							logger.trace("indexPrevLowQualityBase {}, numLowQualityBase {}", indexPrevLowQualityBase, numLowQualityBase);
 
 							// process the bases to the right of the rightmost low quality base
 							if (numLowQualityBase > 0) {
@@ -447,7 +447,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 					numLowQualityBase = 0;
 					prevLowQualityIndex = 0;
 
-					logger.debug("one solid region");
+					logger.trace("one solid region");
 
 					// each base in the solid island (0-base)
 					first = solidRegions.get(0).first();
@@ -478,7 +478,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 						}
 					}
 
-					logger.debug("prevLowQualityIndex {}, numLowQualityBase {}", prevLowQualityIndex, numLowQualityBase);
+					logger.trace("prevLowQualityIndex {}, numLowQualityBase {}", prevLowQualityIndex, numLowQualityBase);
 
 					// the above is done only when this procedure does not remove the only solid island
 					if (solidRegionsTemp.size() > 0) {
@@ -659,13 +659,13 @@ public class BLESS2 extends CorrectionAlgorithm {
 			}
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("{} solid regions after step 0-7 (shortNonSolidRegion {})", solidRegions.size(), shortNonSolidRegion);
+		if (logger.isTraceEnabled()) {
+			logger.trace("{} solid regions after step 0-7 (shortNonSolidRegion {})", solidRegions.size(), shortNonSolidRegion);
 			for(SolidRegion reg: solidRegions)
-				logger.debug(reg.first() + " " + reg.second() + " " + (reg.second() - reg.first() + 1));
-			logger.debug("{} original solid regions after step 0-7", solidRegionsOrg.size());
+				logger.trace(reg.first() + " " + reg.second() + " " + (reg.second() - reg.first() + 1));
+			logger.trace("{} original solid regions after step 0-7", solidRegionsOrg.size());
 			for(SolidRegion reg: solidRegionsOrg)
-				logger.debug(reg.first() + " " + reg.second() + " " + (reg.second() - reg.first() + 1));
+				logger.trace(reg.first() + " " + reg.second() + " " + (reg.second() - reg.first() + 1));
 		}
 
 		//--------------------------------------------------
@@ -765,7 +765,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			logger.debug("after step 1: numCorrectedErrors {}, trim3End {}, trim5End {}", numCorrectedErrors, trim.get3End(), trim.get5End());
+			logger.trace("after step 1: numCorrectedErrors {}, trim3End {}, trim5End {}", numCorrectedErrors, trim.get3End(), trim.get5End());
 		} else {
 			//--------------------------------------------------
 			// no solid region or short weak regions
@@ -777,10 +777,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 			// find potentially wrong bases
 			correctErrorsFirstKmer(sequence, kmer, kmerRC, kmerAux, candidatePaths, sequenceMod);
 
-			if (logger.isDebugEnabled()) {
-				logger.debug("candidate paths after correctErrorsFirstKmer");
+			if (logger.isTraceEnabled()) {
+				logger.trace("candidate paths after correctErrorsFirstKmer");
 				for (CandidatePath path: candidatePaths)
-					logger.debug(path.getSumQs() + " " + path.getModifiedBases().size());
+					logger.trace(path.getSumQs() + " " + path.getModifiedBases().size());
 			}
 
 			// filter some candidates by extending the first k-mer to the left
@@ -816,10 +816,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			if (logger.isDebugEnabled()) {
-				logger.debug("candidate paths after step 2-1");
+			if (logger.isTraceEnabled()) {
+				logger.trace("candidate paths after step 2-1");
 				for (CandidatePath path: candidatePathsTemp)
-					logger.debug(path.getSumQs() + " " + path.getModifiedBases().size());
+					logger.trace(path.getSumQs() + " " + path.getModifiedBases().size());
 			}
 
 			candidatePaths.clear();
@@ -862,10 +862,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 					candidatePathsTemp.add(path);
 			}
 
-			if (logger.isDebugEnabled()) {
-				logger.debug("candidate paths after step 2-2");
+			if (logger.isTraceEnabled()) {
+				logger.trace("candidate paths after step 2-2");
 				for (CandidatePath path: candidatePathsTemp)
-					logger.debug(path.getSumQs() + " " + path.getModifiedBases().size());
+					logger.trace(path.getSumQs() + " " + path.getModifiedBases().size());
 			}
 
 			//--------------------------------------------------
@@ -896,7 +896,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 
 			numCorrectedErrors += numCorrectedErrorsStep2;
 
-			logger.debug("after step 2: numCorrectedErrors {}, trim3End {}, trim5End {}", numCorrectedErrors, trim.get3End(), trim.get5End());
+			logger.trace("after step 2: numCorrectedErrors {}, trim3End {}, trim5End {}", numCorrectedErrors, trim.get3End(), trim.get5End());
 		}
 
 		double maxErrors = seqLength * MAX_ERROR_RATIO;
@@ -930,7 +930,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 
 		// make a trimmed read
 		if (TRIMMING && ((trim.get5End() + trim.get3End()) > 0)) {
-			logger.debug("trimming: trim3End {}, trim5End {}", trim.get3End(), trim.get5End());
+			logger.trace("trimming: trim3End {}, trim5End {}", trim.get3End(), trim.get5End());
 			int len = seqLength - trim.get5End() - trim.get3End();
 			sequence.setBases(bases, trim.get5End(), len);
 			// Base quality scores
@@ -938,11 +938,11 @@ public class BLESS2 extends CorrectionAlgorithm {
 				sequence.setQuals(quals, trim.get5End(), len);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("trim5End {}, trim3End {}, maxErrors {}, numCorrectedErrors {}, tooManyErrors {}", trim.get5End(), trim.get3End(), maxErrors, numCorrectedErrors, tooManyErrors);	
-			logger.debug("sequenceOrig {}", new String(basesSafe, StandardCharsets.US_ASCII));
-			logger.debug("sequenceMod  {}", sequence.basesToString());
-			logger.debug("sequenceMods {}", new String(sequenceMod, StandardCharsets.US_ASCII));
+		if (logger.isTraceEnabled()) {
+			logger.trace("trim5End {}, trim3End {}, maxErrors {}, numCorrectedErrors {}, tooManyErrors {}", trim.get5End(), trim.get3End(), maxErrors, numCorrectedErrors, tooManyErrors);	
+			logger.trace("sequenceOrig {}", new String(basesSafe, StandardCharsets.US_ASCII));
+			logger.trace("sequenceMod  {}", sequence.basesToString());
+			logger.trace("sequenceMods {}", new String(sequenceMod, StandardCharsets.US_ASCII));
 		}
 
 		return sequence;
@@ -977,8 +977,8 @@ public class BLESS2 extends CorrectionAlgorithm {
 		// k-mers that are overlapped with a solid region cannot be modified
 		int index_last_mod = index_end - kmerLength + 1;
 
-		logger.debug("correctErrorsBetweenSolidRegions {},{},{}", index_start, index_end, index_last_mod);
-		logger.debug("left_first {}, right_second {}, org_boundary_left {}, org_boundary_right {}", left_first, right_second, org_boundary_left, org_boundary_right);
+		logger.trace("correctErrorsBetweenSolidRegions {},{},{}", index_start, index_end, index_last_mod);
+		logger.trace("left_first {}, right_second {}, org_boundary_left {}, org_boundary_right {}", left_first, right_second, org_boundary_left, org_boundary_right);
 
 		// make an initial k-mer
 		kmer.set(bases, index_start, kmerLength);
@@ -1011,10 +1011,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 				if (index_start == index_last_mod) {
 					candidatePaths.add(candidatePath);
 
-					if (logger.isDebugEnabled()) {
-						logger.debug("candidatePath corrections");
+					if (logger.isTraceEnabled()) {
+						logger.trace("candidatePath corrections");
 						for (Correction corr: candidatePath.getModifiedBases()) {
-							logger.debug("{} {}", corr.getIndex(), corr.getBase());
+							logger.trace("{} {}", corr.getIndex(), corr.getBase());
 						}
 					}
 				} else {
@@ -1026,10 +1026,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 			}
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("candidatePaths size {}, runExploration {}", candidatePaths.size(), runExploration);
+		if (logger.isTraceEnabled()) {
+			logger.trace("candidatePaths size {}, runExploration {}", candidatePaths.size(), runExploration);
 			for (CandidatePath path: candidatePaths)
-				logger.debug(path.getSumQs() + " " +path.getModifiedBases().size());
+				logger.trace(path.getSumQs() + " " +path.getModifiedBases().size());
 		}
 
 		// complete exploration was not done because there are too many candidate paths
@@ -1054,7 +1054,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 			nMods = modifiedBasesList.size() - 1;
 			index_last_modified_base = modifiedBasesList.get(nMods).getIndex();
 
-			logger.debug("index_last_modified_base, index_last_mod {},{}", index_last_modified_base, index_last_mod);
+			logger.trace("index_last_modified_base, index_last_mod {},{}", index_last_modified_base, index_last_mod);
 
 			if (index_last_modified_base > index_last_mod) {
 				// checking is needed
@@ -1088,7 +1088,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 					}
 				}
 
-				logger.debug("num_success {}, num_fails {}", num_success, num_fails);
+				logger.trace("num_success {}, num_fails {}", num_success, num_fails);
 
 				if (num_success >= (index_last_modified_base - index_last_mod + 1 - NUM_ALLOWABLE_FAILS))
 					candidatePathsTemp.add(path);
@@ -1098,10 +1098,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 			}
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("candidatePathsTemp size {}, allSolidWoModification {}", candidatePathsTemp.size(), allSolidWoModification);
+		if (logger.isTraceEnabled()) {
+			logger.trace("candidatePathsTemp size {}, allSolidWoModification {}", candidatePathsTemp.size(), allSolidWoModification);
 			for (CandidatePath path: candidatePathsTemp)
-				logger.debug(path.getSumQs() + " " + path.getModifiedBases().size());
+				logger.trace(path.getSumQs() + " " + path.getModifiedBases().size());
 		}
 
 		// remain only really modified paths
@@ -1121,10 +1121,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 				candidatePaths.add(path);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("final candidatePaths size {}", candidatePaths.size());
+		if (logger.isTraceEnabled()) {
+			logger.trace("final candidatePaths size {}", candidatePaths.size());
 			for (CandidatePath path: candidatePaths)
-				logger.debug(path.getSumQs() + " " +path.getModifiedBases().size());
+				logger.trace(path.getSumQs() + " " +path.getModifiedBases().size());
 		}
 
 		// all k-mers are solid without any modification
@@ -1159,10 +1159,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			if (logger.isDebugEnabled()) {
-				logger.debug("candidatePaths size {}", candidatePaths.size());
+			if (logger.isTraceEnabled()) {
+				logger.trace("candidatePaths size {}", candidatePaths.size());
 				for (CandidatePath path: candidatePaths)
-					logger.debug(path.getSumQs() + " " +path.getModifiedBases().size());
+					logger.trace(path.getSumQs() + " " +path.getModifiedBases().size());
 			}
 
 			// check whether too many bases are modified in the first path, which implies indel may exist in the original read
@@ -1226,7 +1226,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			logger.debug("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
+			logger.trace("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
 
 			// use the 1st path if not too many corrections are made AND if the 1st path has a sufficiently low score
 			// if an indel exists using quality scores is not a good way to choose the best path
@@ -1237,7 +1237,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 					base = corr.getBase();
 					sequenceMod[index] = base;
 					bases[index] = base;
-					logger.debug("Correction(1): index {} base {}", index, base);
+					logger.trace("Correction(1): index {} base {}", index, base);
 					numCorrectedErrors++;
 				}
 			} else {
@@ -1268,16 +1268,16 @@ public class BLESS2 extends CorrectionAlgorithm {
 
 				baseDifference(baseUnion, baseIntersection, baseDifference);
 
-				if (logger.isDebugEnabled()) {
-					logger.debug("baseIntersection size {}", baseIntersection.size());
+				if (logger.isTraceEnabled()) {
+					logger.trace("baseIntersection size {}", baseIntersection.size());
 					for (Correction corr: baseIntersection)
-						logger.debug(corr.getIndex() + "," +corr.getBase());
-					logger.debug("baseUnion size {}", baseUnion.size());
+						logger.trace(corr.getIndex() + "," +corr.getBase());
+					logger.trace("baseUnion size {}", baseUnion.size());
 					for (Correction corr: baseUnion)
-						logger.debug(corr.getIndex() + "," +corr.getBase());
-					logger.debug("baseDifference size {}", baseDifference.size());
+						logger.trace(corr.getIndex() + "," +corr.getBase());
+					logger.trace("baseDifference size {}", baseDifference.size());
 					for (Correction corr: baseDifference)
-						logger.debug(corr.getIndex() + "," +corr.getBase());
+						logger.trace(corr.getIndex() + "," +corr.getBase());
 				}
 
 				// find trimmed region
@@ -1334,7 +1334,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 						}
 					}
 
-					logger.debug("trim3End {}, trim5End {}", trim.get3End(), trim.get5End());
+					logger.trace("trim3End {}, trim5End {}", trim.get3End(), trim.get5End());
 
 					// find consensus modifications
 					for (Correction corr: baseIntersection) {
@@ -1348,7 +1348,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 							if (bases[index] != base) {
 								sequenceMod[index] = base;
 								bases[index] = base;
-								logger.debug("Correction(2): index {} base {}", index, base);
+								logger.trace("Correction(2): index {} base {}", index, base);
 								numCorrectedErrors++;
 							}
 						}
@@ -1394,7 +1394,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 											base = modifiedBases.get(it_base).getBase();
 											sequenceMod[index] = base;
 											bases[index] = base;
-											logger.debug("Correction(3): index {} base {}", index, base);
+											logger.trace("Correction(3): index {} base {}", index, base);
 											numCorrectedErrors++;
 										}
 									}
@@ -1408,7 +1408,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 											base = modifiedBases.get(it_base).getBase();
 											sequenceMod[index] = base;
 											bases[index] = base;
-											logger.debug("Correction(4): index {} base {}", index, base);
+											logger.trace("Correction(4): index {} base {}", index, base);
 											numCorrectedErrors++;
 										}
 									}
@@ -1420,7 +1420,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 						}
 					}
 
-					logger.debug("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
+					logger.trace("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
 
 				} else if (((index_start - left_first) <= MAX_MODIFICATION) && ((right_second - index_end + 2) > MAX_MODIFICATION)) {
 					// the 1st island is big && the second island is small
@@ -1446,7 +1446,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 						}
 					}
 
-					logger.debug("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
+					logger.trace("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
 				}
 			}
 
@@ -1458,7 +1458,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 					base = corr.getBase();
 					sequenceMod[index] = base;
 					bases[index] = base;
-					logger.debug("Correction(5): index {} base {}", index, base);
+					logger.trace("Correction(5): index {} base {}", index, base);
 					numCorrectedErrors++;
 				}
 			}
@@ -1481,7 +1481,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 				trim.set5End(org_boundary_right + 1);
 			}
 
-			logger.debug("no path, trim3End {}, trim5End {}", trim.get3End(), trim.get5End());
+			logger.trace("no path, trim3End {}, trim5End {}", trim.get3End(), trim.get5End());
 		}
 
 		return numCorrectedErrors;
@@ -1508,7 +1508,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		List<Correction> modifiedBases;
 		boolean runExploration = true, reallyModified, tooManyCorrections;
 
-		logger.debug("correctErrors5PrimeEnd {},{}", index_start, org_boundary);
+		logger.trace("correctErrors5PrimeEnd {},{}", index_start, org_boundary);
 
 		candidatePaths.clear();
 		candidatePathsTemp.clear();
@@ -1542,10 +1542,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 				if (index_start == 0) {
 					candidatePaths.add(candidatePath);
 
-					if (logger.isDebugEnabled()) {
-						logger.debug("candidatePath corrections");
+					if (logger.isTraceEnabled()) {
+						logger.trace("candidatePath corrections");
 						for (Correction corr: candidatePath.getModifiedBases()) {
-							logger.debug("{} {}", corr.getIndex(), corr.getBase());
+							logger.trace("{} {}", corr.getIndex(), corr.getBase());
 						}
 					}
 				} else if (index_start > 0) {
@@ -1556,10 +1556,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 			}
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("candidatePaths size {}, runExploration {}", candidatePaths.size(), runExploration);
+		if (logger.isTraceEnabled()) {
+			logger.trace("candidatePaths size {}, runExploration {}", candidatePaths.size(), runExploration);
 			for (CandidatePath path: candidatePaths)
-				logger.debug(path.getSumQs() + " " +path.getModifiedBases().size());
+				logger.trace(path.getSumQs() + " " +path.getModifiedBases().size());
 		}
 
 		// complete exploration was not done because there are too many candidate paths
@@ -1580,10 +1580,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 			performExtendOutLeft(kmer, sequence, basesTemp, path, candidatePathsTemp, kmerRC, kmerAux);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("candidatePathsTemp size {}, allSolidWoModification {}", candidatePathsTemp.size(), allSolidWoModification);
+		if (logger.isTraceEnabled()) {
+			logger.trace("candidatePathsTemp size {}, allSolidWoModification {}", candidatePathsTemp.size(), allSolidWoModification);
 			for (CandidatePath path: candidatePathsTemp)
-				logger.debug(path.getSumQs() + " " +path.getModifiedBases().size());
+				logger.trace(path.getSumQs() + " " +path.getModifiedBases().size());
 		}
 
 		// remain only really modified paths
@@ -1603,12 +1603,12 @@ public class BLESS2 extends CorrectionAlgorithm {
 				candidatePaths.add(path);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("final candidatePaths size {}", candidatePaths.size());
+		if (logger.isTraceEnabled()) {
+			logger.trace("final candidatePaths size {}", candidatePaths.size());
 			for (CandidatePath path: candidatePaths) {
-				logger.debug(path.getSumQs() + " " +path.getModifiedBases().size());
+				logger.trace(path.getSumQs() + " " +path.getModifiedBases().size());
 				for (Correction corr: path.getModifiedBases())
-					logger.debug(corr.getIndex() + " " +corr.getBase());
+					logger.trace(corr.getIndex() + " " +corr.getBase());
 			}
 		}
 
@@ -1644,10 +1644,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			if (logger.isDebugEnabled()) {
-				logger.debug("candidatePaths size {}", candidatePaths.size());
+			if (logger.isTraceEnabled()) {
+				logger.trace("candidatePaths size {}", candidatePaths.size());
 				for (CandidatePath path: candidatePaths)
-					logger.debug(path.getSumQs() + " " +path.getModifiedBases().size());
+					logger.trace(path.getSumQs() + " " +path.getModifiedBases().size());
 			}
 
 			// check whether too many bases are modified in the first path, which implies indel may exist in the original read
@@ -1679,7 +1679,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			logger.debug("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
+			logger.trace("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
 
 			// use the 1st path if not too many corrections are made AND if the 1st path has a sufficiently low score
 			// if an indel exists using quality scores is not a good way to choose the best path
@@ -1690,7 +1690,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 					base = corr.getBase();
 					sequenceMod[index] = base;
 					bases[index] = base;
-					logger.debug("Correction(1): index {} base {}", index, base);
+					logger.trace("Correction(1): index {} base {}", index, base);
 					numCorrectedErrors++;
 				}
 			} else {
@@ -1721,16 +1721,16 @@ public class BLESS2 extends CorrectionAlgorithm {
 
 				baseDifference(baseUnion, baseIntersection, baseDifference);
 
-				if (logger.isDebugEnabled()) {
-					logger.debug("baseIntersection size {}", baseIntersection.size());
+				if (logger.isTraceEnabled()) {
+					logger.trace("baseIntersection size {}", baseIntersection.size());
 					for (Correction corr: baseIntersection)
-						logger.debug(corr.getIndex() + "," +corr.getBase());
-					logger.debug("baseUnion size {}", baseUnion.size());
+						logger.trace(corr.getIndex() + "," +corr.getBase());
+					logger.trace("baseUnion size {}", baseUnion.size());
 					for (Correction corr: baseUnion)
-						logger.debug(corr.getIndex() + "," +corr.getBase());
-					logger.debug("baseDifference size {}", baseDifference.size());
+						logger.trace(corr.getIndex() + "," +corr.getBase());
+					logger.trace("baseDifference size {}", baseDifference.size());
 					for (Correction corr: baseDifference)
-						logger.debug(corr.getIndex() + "," +corr.getBase());
+						logger.trace(corr.getIndex() + "," +corr.getBase());
 				}
 
 				// find trimmed region
@@ -1788,7 +1788,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 					}
 				}
 
-				logger.debug("trim3End {}, trim5End {}", trim.get3End(), trim.get5End());
+				logger.trace("trim3End {}, trim5End {}", trim.get3End(), trim.get5End());
 
 				// find consensus modifications
 				for (Correction corr: baseIntersection) {
@@ -1802,7 +1802,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 						if (bases[index] != base) {
 							sequenceMod[index] = base;
 							bases[index] = base;
-							logger.debug("Correction(2): index {} base {}", index, base);
+							logger.trace("Correction(2): index {} base {}", index, base);
 							numCorrectedErrors++;
 						}
 					}
@@ -1839,7 +1839,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 									base = modifiedBases.get(it_base).getBase();
 									sequenceMod[index] = base;
 									bases[index] = base;
-									logger.debug("Correction(3): index {} base {}", index, base);
+									logger.trace("Correction(3): index {} base {}", index, base);
 									numCorrectedErrors++;
 								}
 							}
@@ -1853,7 +1853,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 									base = modifiedBases.get(it_base).getBase();
 									sequenceMod[index] = base;
 									bases[index] = base;
-									logger.debug("Correction(4): index {} base {}", index, base);
+									logger.trace("Correction(4): index {} base {}", index, base);
 									numCorrectedErrors++;
 								}
 							}
@@ -1865,7 +1865,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			logger.debug("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
+			logger.trace("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
 
 			if (tooManyCorrections == false) {
 				// not too many modified bases
@@ -1875,7 +1875,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 					base = corr.getBase();
 					sequenceMod[index] = base;
 					bases[index] = base;
-					logger.debug("Correction(5): index {} base {}", index, base);
+					logger.trace("Correction(5): index {} base {}", index, base);
 					numCorrectedErrors++;
 				}
 			}
@@ -1905,7 +1905,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		List<Correction> modifiedBases;
 		boolean runExploration = true, reallyModified, tooManyCorrections;
 
-		logger.debug("correctErrors3PrimeEnd {},{}", index_start, org_boundary);
+		logger.trace("correctErrors3PrimeEnd {},{}", index_start, org_boundary);
 
 		candidatePaths.clear();
 		candidatePathsTemp.clear();
@@ -1940,10 +1940,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 				if (index_start == size) {
 					candidatePaths.add(candidatePath);
 
-					if (logger.isDebugEnabled()) {
-						logger.debug("candidatePath corrections");
+					if (logger.isTraceEnabled()) {
+						logger.trace("candidatePath corrections");
 						for (Correction corr: candidatePath.getModifiedBases()) {
-							logger.debug("{} {}", corr.getIndex(), corr.getBase());
+							logger.trace("{} {}", corr.getIndex(), corr.getBase());
 						}
 					}
 				} else if (index_start < size) {
@@ -1954,10 +1954,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 			}
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("candidatePaths size {}, runExploration {}", candidatePaths.size(), runExploration);
+		if (logger.isTraceEnabled()) {
+			logger.trace("candidatePaths size {}, runExploration {}", candidatePaths.size(), runExploration);
 			for (CandidatePath path: candidatePaths)
-				logger.debug(path.getSumQs() + " " +path.getModifiedBases().size());
+				logger.trace(path.getSumQs() + " " +path.getModifiedBases().size());
 		}
 
 		// complete exploration was not done because there are too many candidate paths
@@ -1978,10 +1978,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 			performExtendOutRight(kmer, sequence, basesTemp, path, candidatePathsTemp, kmerRC, kmerAux);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("candidatePathsTemp size {}, allSolidWoModification {}", candidatePathsTemp.size(), allSolidWoModification);
+		if (logger.isTraceEnabled()) {
+			logger.trace("candidatePathsTemp size {}, allSolidWoModification {}", candidatePathsTemp.size(), allSolidWoModification);
 			for (CandidatePath path: candidatePathsTemp)
-				logger.debug(path.getSumQs() + " " +path.getModifiedBases().size());
+				logger.trace(path.getSumQs() + " " +path.getModifiedBases().size());
 		}
 
 		// remain only really modified paths
@@ -2001,10 +2001,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 				candidatePaths.add(path);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("final candidatePaths size {}", candidatePaths.size());
+		if (logger.isTraceEnabled()) {
+			logger.trace("final candidatePaths size {}", candidatePaths.size());
 			for (CandidatePath path: candidatePaths)
-				logger.debug(path.getSumQs() + " " +path.getModifiedBases().size());
+				logger.trace(path.getSumQs() + " " +path.getModifiedBases().size());
 		}
 
 		// all k-mers are solid without any modification
@@ -2039,10 +2039,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			if (logger.isDebugEnabled()) {
-				logger.debug("candidatePaths size {}", candidatePaths.size());
+			if (logger.isTraceEnabled()) {
+				logger.trace("candidatePaths size {}", candidatePaths.size());
 				for (CandidatePath path: candidatePaths)
-					logger.debug(path.getSumQs() + " " +path.getModifiedBases().size());
+					logger.trace(path.getSumQs() + " " +path.getModifiedBases().size());
 			}
 
 			// check whether too many bases are modified in the first path, which implies indel may exist in the original read
@@ -2074,7 +2074,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			logger.debug("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
+			logger.trace("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
 
 			// use the 1st path if not too many corrections are made AND if the 1st path has a sufficiently low score
 			// if an indel exists using quality scores is not a good way to choose the best path
@@ -2085,7 +2085,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 					base = corr.getBase();
 					sequenceMod[index] = base;
 					bases[index] = base;
-					logger.debug("Correction(1): index {} base {}", index, base);
+					logger.trace("Correction(1): index {} base {}", index, base);
 					numCorrectedErrors++;
 				}
 			} else {
@@ -2116,16 +2116,16 @@ public class BLESS2 extends CorrectionAlgorithm {
 
 				baseDifference(baseUnion, baseIntersection, baseDifference);
 
-				if (logger.isDebugEnabled()) {
-					logger.debug("baseIntersection size {}", baseIntersection.size());
+				if (logger.isTraceEnabled()) {
+					logger.trace("baseIntersection size {}", baseIntersection.size());
 					for (Correction corr: baseIntersection)
-						logger.debug(corr.getIndex() + "," +corr.getBase());
-					logger.debug("baseUnion size {}", baseUnion.size());
+						logger.trace(corr.getIndex() + "," +corr.getBase());
+					logger.trace("baseUnion size {}", baseUnion.size());
 					for (Correction corr: baseUnion)
-						logger.debug(corr.getIndex() + "," +corr.getBase());
-					logger.debug("baseDifference size {}", baseDifference.size());
+						logger.trace(corr.getIndex() + "," +corr.getBase());
+					logger.trace("baseDifference size {}", baseDifference.size());
 					for (Correction corr: baseDifference)
-						logger.debug(corr.getIndex() + "," +corr.getBase());
+						logger.trace(corr.getIndex() + "," +corr.getBase());
 				}
 
 				// find trimmed region
@@ -2183,7 +2183,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 					}
 				}
 
-				logger.debug("trim3End {}, trim5End {}", trim.get3End(), trim.get5End());
+				logger.trace("trim3End {}, trim5End {}", trim.get3End(), trim.get5End());
 
 				// find consensus modifications
 				for (Correction corr: baseIntersection) {
@@ -2197,7 +2197,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 						if (bases[index] != base) {
 							sequenceMod[index] = base;
 							bases[index] = base;
-							logger.debug("Correction(2): index {} base {}", index, base);
+							logger.trace("Correction(2): index {} base {}", index, base);
 							numCorrectedErrors++;
 						}
 					}
@@ -2234,7 +2234,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 									base = modifiedBases.get(it_base).getBase();
 									sequenceMod[index] = base;
 									bases[index] = base;
-									logger.debug("Correction(3): index {} base {}", index, base);
+									logger.trace("Correction(3): index {} base {}", index, base);
 									numCorrectedErrors++;
 								}
 							}
@@ -2248,7 +2248,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 									base = modifiedBases.get(it_base).getBase();
 									sequenceMod[index] = base;
 									bases[index] = base;
-									logger.debug("Correction(4): index {} base {}", index, base);
+									logger.trace("Correction(4): index {} base {}", index, base);
 									numCorrectedErrors++;
 								}
 							}
@@ -2260,7 +2260,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			logger.debug("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
+			logger.trace("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
 
 			if (tooManyCorrections == false) {
 				// not too many modified bases
@@ -2270,7 +2270,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 					base = corr.getBase();
 					sequenceMod[index] = base;
 					bases[index] = base;
-					logger.debug("Correction(5): index {} base {}", index, base);
+					logger.trace("Correction(5): index {} base {}", index, base);
 					numCorrectedErrors++;
 				}
 			}
@@ -2306,10 +2306,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 			}
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("correctErrorsFirstKmer: lowQsIndexes size {}", lowQsIndexes.size());
+		if (logger.isTraceEnabled()) {
+			logger.trace("correctErrorsFirstKmer: lowQsIndexes size {}", lowQsIndexes.size());
 			for (MutablePair<Short,Byte> qual: lowQsIndexes)
-				logger.debug("{}, {}", qual.right, qual.left);
+				logger.trace("{}, {}", qual.right, qual.left);
 		}
 
 		if (lowQsIndexes.size() == 0) {
@@ -2324,10 +2324,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 				// change the bases with the lowest MAX_LOW_QS_BASES quality scores
 				List<MutablePair<Short,Byte>> lowQsIndexesSorted = sortIndexes(quals, kmerLength);
 
-				if (logger.isDebugEnabled()) {
-					logger.debug("lowQsIndexesSorted size {}", lowQsIndexesSorted.size());
+				if (logger.isTraceEnabled()) {
+					logger.trace("lowQsIndexesSorted size {}", lowQsIndexesSorted.size());
 					for (MutablePair<Short,Byte> qual: lowQsIndexesSorted)
-						logger.debug("{}, {}", qual.left, qual.right);
+						logger.trace("{}, {}", qual.left, qual.right);
 				}
 
 				checkFirstKmer(firstKmer, kmerAux, kmerRC, candidatePath, lowQsIndexesSorted,
@@ -2417,10 +2417,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 				// change the bases with the lowest MAX_LOW_QS_BASES quality scores
 				List<MutablePair<Short,Byte>> lowQsIndexesSorted = sortIndexes(quals, kmerLength);
 
-				if (logger.isDebugEnabled()) {
-					logger.debug("lowQsIndexesSorted size {}", lowQsIndexesSorted.size());
+				if (logger.isTraceEnabled()) {
+					logger.trace("lowQsIndexesSorted size {}", lowQsIndexesSorted.size());
 					for (MutablePair<Short,Byte> qual: lowQsIndexesSorted)
-						logger.debug("{}, {}", qual.left, qual.right);
+						logger.trace("{}, {}", qual.left, qual.right);
 				}
 
 				checkFirstKmer(firstKmer, kmerAux, kmerRC, candidatePath, lowQsIndexesSorted,
@@ -2481,7 +2481,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		byte base, baseTemp;
 		int multi = 0, it_alter, index;
 
-		logger.debug("extendKmer: index_kmer {}, index_last_mod {}, org_boundary_left {}, org_boundary_right {}, runExploration {}", index_kmer, index_last_mod, org_boundary_left, org_boundary_right, runExploration);
+		logger.trace("extendKmer: index_kmer {}, index_last_mod {}, org_boundary_left {}, org_boundary_right {}, runExploration {}", index_kmer, index_last_mod, org_boundary_left, org_boundary_right, runExploration);
 
 		if (!runExploration)
 			return runExploration;
@@ -2524,10 +2524,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 					if ((index_kmer + 1) == index_last_mod) {
 						candidatePaths.add(tempPath);
 
-						if (logger.isDebugEnabled()) {
-							logger.debug("candidatePath corrections");
+						if (logger.isTraceEnabled()) {
+							logger.trace("candidatePath corrections");
 							for (Correction corr: tempPath.getModifiedBases()) {
-								logger.debug("{} {}", corr.getIndex(), corr.getBase());
+								logger.trace("{} {}", corr.getIndex(), corr.getBase());
 							}
 						}
 
@@ -2592,10 +2592,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 							if ((index_kmer + 1) == index_last_mod) {
 								candidatePaths.add(tempPath);
 
-								if (logger.isDebugEnabled()) {
-									logger.debug("candidatePath corrections");
+								if (logger.isTraceEnabled()) {
+									logger.trace("candidatePath corrections");
 									for (Correction corr: tempPath.getModifiedBases()) {
-										logger.debug("{} {}", corr.getIndex(), corr.getBase());
+										logger.trace("{} {}", corr.getIndex(), corr.getBase());
 									}
 								}
 
@@ -2632,7 +2632,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		byte base, baseTemp;
 		int multi = 0, it_alter;
 
-		logger.debug("extendKmer5PrimeEnd: index_kmer {}, org_boundary {}, runExploration {}", index_kmer, org_boundary, runExploration);
+		logger.trace("extendKmer5PrimeEnd: index_kmer {}, org_boundary {}, runExploration {}", index_kmer, org_boundary, runExploration);
 
 		if (!runExploration)
 			return runExploration;
@@ -2673,10 +2673,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 					if ((index_kmer - 1) == 0) {
 						candidatePaths.add(tempPath);
 
-						if (logger.isDebugEnabled()) {
-							logger.debug("candidatePath corrections");
+						if (logger.isTraceEnabled()) {
+							logger.trace("candidatePath corrections");
 							for (Correction corr: tempPath.getModifiedBases()) {
-								logger.debug("{} {}", corr.getIndex(), corr.getBase());
+								logger.trace("{} {}", corr.getIndex(), corr.getBase());
 							}
 						}
 
@@ -2739,10 +2739,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 							if ((index_kmer - 1) == 0) {
 								candidatePaths.add(tempPath);
 
-								if (logger.isDebugEnabled()) {
-									logger.debug("candidatePath corrections");
+								if (logger.isTraceEnabled()) {
+									logger.trace("candidatePath corrections");
 									for (Correction corr: tempPath.getModifiedBases()) {
-										logger.debug("{} {}", corr.getIndex(), corr.getBase());
+										logger.trace("{} {}", corr.getIndex(), corr.getBase());
 									}
 								}
 
@@ -2778,7 +2778,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		byte base, baseTemp;
 		int multi = 0, it_alter, index;
 
-		logger.debug("extendKmer3PrimeEnd: index_kmer {}, org_boundary {}, runExploration {}", index_kmer, org_boundary, runExploration);
+		logger.trace("extendKmer3PrimeEnd: index_kmer {}, org_boundary {}, runExploration {}", index_kmer, org_boundary, runExploration);
 
 		if (!runExploration)
 			return runExploration;
@@ -2820,10 +2820,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 					if ((index_kmer + 1) == (seqLength - kmerLength)) {
 						candidatePaths.add(tempPath);
 
-						if (logger.isDebugEnabled()) {
-							logger.debug("candidatePath corrections");
+						if (logger.isTraceEnabled()) {
+							logger.trace("candidatePath corrections");
 							for (Correction corr: tempPath.getModifiedBases()) {
-								logger.debug("{} {}", corr.getIndex(), corr.getBase());
+								logger.trace("{} {}", corr.getIndex(), corr.getBase());
 							}
 						}
 
@@ -2886,10 +2886,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 							if ((index_kmer + 1) == (seqLength - kmerLength)) {
 								candidatePaths.add(tempPath);
 
-								if (logger.isDebugEnabled()) {
-									logger.debug("candidatePath corrections");
+								if (logger.isTraceEnabled()) {
+									logger.trace("candidatePath corrections");
 									for (Correction corr: tempPath.getModifiedBases()) {
-										logger.debug("{} {}", corr.getIndex(), corr.getBase());
+										logger.trace("{} {}", corr.getIndex(), corr.getBase());
 									}
 								}
 
@@ -2926,7 +2926,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 
 		index_smallest_modified = modifiedBases.get(modifiedBases.size() - 1).getIndex();
 
-		logger.debug("performExtendOutLeft: index_smallest_modified {}", index_smallest_modified);
+		logger.trace("performExtendOutLeft: index_smallest_modified {}", index_smallest_modified);
 
 		if (index_smallest_modified >= kmerLength - 1) {
 			candidatePaths.add(candidatePath);
@@ -2950,7 +2950,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 			extend_amount = MAX_EXTEND;
 		}
 
-		logger.debug("extend_amount {}", extend_amount);
+		logger.trace("extend_amount {}", extend_amount);
 
 		// generate an initial k-mer
 		kmer.set(sequence_tmp, 0, kmerLength);
@@ -2990,7 +2990,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		int it_alter, multi;
 		byte kmerLength = getKmerLength();
 
-		logger.debug("extendOutLeft");
+		logger.trace("extendOutLeft");
 
 		// generate an initial k-mer
 		kmerAux.set(kmer);
@@ -3039,7 +3039,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 
 		index_largest_modified = modifiedBases.get(modifiedBases.size() - 1).getIndex();
 
-		logger.debug("performExtendOutRight: index_largest_modified {}", index_largest_modified);
+		logger.trace("performExtendOutRight: index_largest_modified {}", index_largest_modified);
 
 		if (index_largest_modified <= size) {
 			candidatePaths.add(candidatePath);
@@ -3063,7 +3063,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 			extend_amount = MAX_EXTEND;
 		}
 
-		logger.debug("extend_amount {}", extend_amount);
+		logger.trace("extend_amount {}", extend_amount);
 
 		// generate an initial k-mer
 		kmer.set(sequence_tmp, size, kmerLength);
@@ -3103,7 +3103,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		int it_alter, multi;
 		byte kmerLength = getKmerLength();
 
-		logger.debug("extendOutRight");
+		logger.trace("extendOutRight");
 
 		// generate an initial k-mer
 		kmerAux.set(kmer);
@@ -3149,7 +3149,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		kmerAux.set(kmer);
 		kmer_index = lowQsIndexes.get(index).getLeft();
 
-		logger.debug("checkFirstKmer: index {}, limit {}, kmer_index {}", index, limit, kmer_index);
+		logger.trace("checkFirstKmer: index {}, limit {}, kmer_index {}", index, limit, kmer_index);
 
 		// for each nucleotide
 		for (it_alter = Kmer.ABASE; it_alter<Kmer.NUM_NUCLEOTIDES; it_alter++) {	
@@ -3198,7 +3198,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		// index_smallest_modified
 		index_smallest_modified = modifiedBases.get(0).getIndex();
 
-		logger.debug("solidFirstKmer: index_smallest_modified {}", index_smallest_modified);
+		logger.trace("solidFirstKmer: index_smallest_modified {}", index_smallest_modified);
 
 		// applied the modified bases to first_kmer
 		firstKmer.set(bases, 0, kmerLength);
@@ -3215,7 +3215,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 			extend_amount = MAX_EXTEND;
 		}
 
-		logger.debug("extend_amount {}", extend_amount);
+		logger.trace("extend_amount {}", extend_amount);
 
 		// generate an initial k-mer
 		kmerAux.set(firstKmer);
@@ -3244,7 +3244,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 			}
 		}
 
-		logger.debug("extensionSuccess {}", extensionSuccess);
+		logger.trace("extensionSuccess {}", extensionSuccess);
 
 		return extensionSuccess;
 	}
@@ -3262,7 +3262,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		List<CandidatePath> candidatePathsTemp = new ArrayList<CandidatePath>();
 		byte base;
 
-		logger.debug("extendFirstKmerToRight");
+		logger.trace("extendFirstKmerToRight");
 
 		// generate the second k-mer
 		kmer.set(bases, 1, kmerLength);
@@ -3338,10 +3338,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 		for (CandidatePath path: candidatePathsTemp)
 			performExtendOutRight(kmer, sequence, basesTemp, path, candidatePaths, kmerRC, kmerAux);
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("candidatePaths size {}", candidatePaths.size());
+		if (logger.isTraceEnabled()) {
+			logger.trace("candidatePaths size {}", candidatePaths.size());
 			for (CandidatePath path: candidatePaths)
-				logger.debug(path.getSumQs() + " " + path.getModifiedBases().size());
+				logger.trace(path.getSumQs() + " " + path.getModifiedBases().size());
 		}
 
 		return runExploration;
@@ -3358,7 +3358,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		CandidatePath it_path_1st = null;
 		List<Correction> modifiedBases;
 
-		logger.debug("modifyErrorsFirstKmer: {} paths", candidatePaths.size());
+		logger.trace("modifyErrorsFirstKmer: {} paths", candidatePaths.size());
 
 		if (candidatePaths.size() > 1) {
 			int qs_1st = INIT_MIN_QS;
@@ -3385,10 +3385,10 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			if (logger.isDebugEnabled()) {
-				logger.debug("candidatePaths size {}", candidatePaths.size());
+			if (logger.isTraceEnabled()) {
+				logger.trace("candidatePaths size {}", candidatePaths.size());
 				for (CandidatePath path: candidatePaths)
-					logger.debug(path.getSumQs() + " " +path.getModifiedBases().size());
+					logger.trace(path.getSumQs() + " " +path.getModifiedBases().size());
 			}
 
 			// check whether too many bases are modified in the first path, which implies indel may exist in the original read
@@ -3420,7 +3420,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			logger.debug("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
+			logger.trace("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
 
 			// use the 1st path if not too many corrections are made AND if the 1st path has a sufficiently low score
 			// if an indel exists using quality scores is not a good way to choose the best path
@@ -3431,7 +3431,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 					base = corr.getBase();
 					sequenceMod[index] = base;
 					bases[index] = base;
-					logger.debug("Correction(1): index {} base {}", index, base);
+					logger.trace("Correction(1): index {} base {}", index, base);
 					numCorrectedErrors++;
 				}
 			} else {
@@ -3462,16 +3462,16 @@ public class BLESS2 extends CorrectionAlgorithm {
 
 				baseDifference(baseUnion, baseIntersection, baseDifference);
 
-				if (logger.isDebugEnabled()) {
-					logger.debug("baseIntersection size {}", baseIntersection.size());
+				if (logger.isTraceEnabled()) {
+					logger.trace("baseIntersection size {}", baseIntersection.size());
 					for (Correction corr: baseIntersection)
-						logger.debug(corr.getIndex() + "," +corr.getBase());
-					logger.debug("baseUnion size {}", baseUnion.size());
+						logger.trace(corr.getIndex() + "," +corr.getBase());
+					logger.trace("baseUnion size {}", baseUnion.size());
 					for (Correction corr: baseUnion)
-						logger.debug(corr.getIndex() + "," +corr.getBase());
-					logger.debug("baseDifference size {}", baseDifference.size());
+						logger.trace(corr.getIndex() + "," +corr.getBase());
+					logger.trace("baseDifference size {}", baseDifference.size());
 					for (Correction corr: baseDifference)
-						logger.debug(corr.getIndex() + "," +corr.getBase());
+						logger.trace(corr.getIndex() + "," +corr.getBase());
 				}
 
 				// find trimmed region
@@ -3524,7 +3524,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 						}
 					}
 
-					logger.debug("trim3End {}, trim5End {}", trim.get3End(), trim.get5End());
+					logger.trace("trim3End {}, trim5End {}", trim.get3End(), trim.get5End());
 				}
 
 				// find consensus modifications
@@ -3539,7 +3539,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 						if (bases[index] != base) {
 							sequenceMod[index] = base;
 							bases[index] = base;
-							logger.debug("Correction(2): index {} base {}", index, base);
+							logger.trace("Correction(2): index {} base {}", index, base);
 							numCorrectedErrors++;
 						}
 					}
@@ -3577,7 +3577,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 									base = modifiedBases.get(it_base).getBase();
 									sequenceMod[index] = base;
 									bases[index] = base;
-									logger.debug("Correction(3): index {} base {}", index, base);
+									logger.trace("Correction(3): index {} base {}", index, base);
 									numCorrectedErrors++;
 								}
 							}
@@ -3591,7 +3591,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 									base = modifiedBases.get(it_base).getBase();
 									sequenceMod[index] = base;
 									bases[index] = base;
-									logger.debug("Correction(4): index {} base {}", index, base);
+									logger.trace("Correction(4): index {} base {}", index, base);
 									numCorrectedErrors++;
 								}
 							}
@@ -3603,7 +3603,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 				}
 			}
 
-			logger.debug("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
+			logger.trace("tooManyCorrections {}, trim3End {}, trim5End {}", tooManyCorrections, trim.get3End(), trim.get5End());
 
 			if (tooManyCorrections == false) {
 				// not too many modified bases
@@ -3613,7 +3613,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 					base = corr.getBase();
 					sequenceMod[index] = base;
 					bases[index] = base;
-					logger.debug("Correction(5): index {} base {}", index, base);
+					logger.trace("Correction(5): index {} base {}", index, base);
 					numCorrectedErrors++;
 				}
 			}

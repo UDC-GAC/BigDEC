@@ -253,8 +253,8 @@ public class RECKONER extends CorrectionAlgorithm {
 
 		System.arraycopy(bases, 0, basesSafe, 0, basesSafe.length);
 
-		if (logger.isDebugEnabled())
-			logger.debug("Correcting {}", sequence.basesToString());
+		if (logger.isTraceEnabled())
+			logger.trace("Correcting {}", sequence.basesToString());
 
 		/*String seq = "GACGGTGTGAGGCCGGTAGCGGCCCCCGGCGCGCCGGGCCCGGGACTTCCCGGAGTCGGGTTGCTTGGGAAAGCC";
 		if (!sequence.basesToString().equals(seq))
@@ -265,7 +265,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		numOfNs = CorrectionAlgorithm.replaceNs(sequence, SUBST_BASE);
 		tooManyNs = numOfNs >= (seqLength * MAX_N_RATIO);
 
-		logger.debug("numberOfNs {}, tooManyNs {}", numOfNs, tooManyNs);
+		logger.trace("numberOfNs {}, tooManyNs {}", numOfNs, tooManyNs);
 
 		if (tooManyNs) {
 			// Revert changes
@@ -342,7 +342,7 @@ public class RECKONER extends CorrectionAlgorithm {
 						}
 					}
 
-					logger.debug("two solid regions, flagShortDistance {}", flagShortDistance);
+					logger.trace("two solid regions, flagShortDistance {}", flagShortDistance);
 
 					if (flagShortDistance == true) {
 						// each solid island
@@ -375,7 +375,7 @@ public class RECKONER extends CorrectionAlgorithm {
 								}
 							}
 
-							logger.debug("indexPrevLowQualityBase {}, numLowQualityBase {}", indexPrevLowQualityBase, numLowQualityBase);
+							logger.trace("indexPrevLowQualityBase {}, numLowQualityBase {}", indexPrevLowQualityBase, numLowQualityBase);
 
 							// process the bases to the right of the rightmost low quality base
 							if (numLowQualityBase > 0) {
@@ -398,7 +398,7 @@ public class RECKONER extends CorrectionAlgorithm {
 					numLowQualityBase = 0;
 					prevLowQualityIndex = 0;
 
-					logger.debug("one solid region");
+					logger.trace("one solid region");
 
 					// each base in the solid island (0-base)
 					first = solidRegions.get(0).first();
@@ -427,7 +427,7 @@ public class RECKONER extends CorrectionAlgorithm {
 						}
 					}
 
-					logger.debug("prevLowQualityIndex {}, numLowQualityBase {}", prevLowQualityIndex, numLowQualityBase);
+					logger.trace("prevLowQualityIndex {}, numLowQualityBase {}", prevLowQualityIndex, numLowQualityBase);
 
 					// the above is done only when this procedure does not remove the only solid island
 					if (solidRegionsTemp.size() > 0) {
@@ -616,10 +616,10 @@ public class RECKONER extends CorrectionAlgorithm {
 			}
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("{} solid regions after step 0-7 (shortNonSolidRegion {})", solidRegions.size(), shortNonSolidRegion);
+		if (logger.isTraceEnabled()) {
+			logger.trace("{} solid regions after step 0-7 (shortNonSolidRegion {})", solidRegions.size(), shortNonSolidRegion);
 			for(SolidRegion reg: solidRegions)
-				logger.debug(reg.first() + " " + reg.second() + " " + (reg.second() - reg.first() + 1));
+				logger.trace(reg.first() + " " + reg.second() + " " + (reg.second() - reg.first() + 1));
 		}
 
 		//--------------------------------------------------
@@ -628,7 +628,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		byte[] basesTemp = new byte[seqLength];
 		byte[] basesMod = null;
 
-		if (logger.isDebugEnabled()) {
+		if (logger.isTraceEnabled()) {
 			basesMod = new byte[seqLength];
 			Arrays.fill(basesMod, (byte) 48); //fill with zeros
 		}
@@ -714,10 +714,10 @@ public class RECKONER extends CorrectionAlgorithm {
 				}
 			}
 
-			if (logger.isDebugEnabled()) {
-				logger.debug("candidate paths after step 2-1");
+			if (logger.isTraceEnabled()) {
+				logger.trace("candidate paths after step 2-1");
 				for (CandidatePath path: candidatePathsTemp)
-					logger.debug(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
+					logger.trace(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
 			}
 
 			candidatePaths.clear();
@@ -737,10 +737,10 @@ public class RECKONER extends CorrectionAlgorithm {
 				}
 			}
 
-			if (logger.isDebugEnabled()) {
-				logger.debug("candidate paths after step 2-2");
+			if (logger.isTraceEnabled()) {
+				logger.trace("candidate paths after step 2-2");
 				for (CandidatePath path: candidatePaths)
-					logger.debug(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
+					logger.trace(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
 			}
 
 			//--------------------------------------------------
@@ -763,11 +763,11 @@ public class RECKONER extends CorrectionAlgorithm {
 			sequence.setBases(basesSafe);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("maxErrors {}, sumErrors {}, tooManyErrors {}", maxErrors, sumErrors, tooManyErrors);	
-			logger.debug("sequenceOrig {}", new String(basesSafe, StandardCharsets.US_ASCII));
-			logger.debug("sequenceMod  {}", sequence.basesToString());
-			logger.debug("sequenceMods {}", new String(basesMod, StandardCharsets.US_ASCII));
+		if (logger.isTraceEnabled()) {
+			logger.trace("maxErrors {}, sumErrors {}, tooManyErrors {}", maxErrors, sumErrors, tooManyErrors);	
+			logger.trace("sequenceOrig {}", new String(basesSafe, StandardCharsets.US_ASCII));
+			logger.trace("sequenceMod  {}", sequence.basesToString());
+			logger.trace("sequenceMods {}", new String(basesMod, StandardCharsets.US_ASCII));
 		}
 
 		return sequence;
@@ -792,7 +792,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		// k-mers that are overlapped with a solid region cannot be modified
 		int index_last_mod = index_end - kmerLength + 1;
 
-		logger.debug("correctErrorsBetweenSolidRegions {},{},{}", index_start, index_end, index_last_mod);
+		logger.trace("correctErrorsBetweenSolidRegions {},{},{}", index_start, index_end, index_last_mod);
 
 		// make an initial k-mer
 		kmer.set(bases, index_start, kmerLength);
@@ -842,7 +842,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		// for each candidate path
 		for (it_path = 0; it_path < candidatePathsTemp.size(); it_path++) {
 			candidatePath = candidatePathsTemp.get(it_path);
-			logger.debug(candidatePath.getKmersQuality() + " " + candidatePath.getCoveringKmersWeight() + " " + candidatePath.getModifiedBases().size());
+			logger.trace(candidatePath.getKmersQuality() + " " + candidatePath.getCoveringKmersWeight() + " " + candidatePath.getModifiedBases().size());
 
 			if (candidatePath.getModifiedBases().size() == 0) {
 				allSolidWoModification = true;
@@ -853,7 +853,7 @@ public class RECKONER extends CorrectionAlgorithm {
 				nMods = modifiedBasesList.size() - 1;
 				index_last_modified_base = modifiedBasesList.get(nMods).getIndex();
 
-				logger.debug("index_last_modified_base, index_last_mod {},{}", index_last_modified_base, index_last_mod);
+				logger.trace("index_last_modified_base, index_last_mod {},{}", index_last_modified_base, index_last_mod);
 
 				if (index_last_modified_base > index_last_mod) {
 					// generate a temporary sequence
@@ -891,11 +891,11 @@ public class RECKONER extends CorrectionAlgorithm {
 			}
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("allSolidWoModification {}", allSolidWoModification);
-			logger.debug("candidatePaths size {}", candidatePaths.size());
+		if (logger.isTraceEnabled()) {
+			logger.trace("allSolidWoModification {}", allSolidWoModification);
+			logger.trace("candidatePaths size {}", candidatePaths.size());
 			for (CandidatePath path: candidatePaths)
-				logger.debug(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
+				logger.trace(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
 		}
 
 		// all k-mers are solid without any modification
@@ -918,7 +918,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		int it_alter, it_path, multi, max_remaining_changes, checked_changes;
 		CandidatePath candidatePath;
 
-		logger.debug("correctErrors5PrimeEnd {}", index_start);
+		logger.trace("correctErrors5PrimeEnd {}", index_start);
 
 		candidatePaths.clear();
 		candidatePathsTemp.clear();
@@ -975,14 +975,14 @@ public class RECKONER extends CorrectionAlgorithm {
 		// for each candidate path
 		for (it_path = 0; it_path < candidatePathsTemp.size(); it_path++) {
 			candidatePath = candidatePathsTemp.get(it_path);
-			logger.debug("extending " + candidatePath.getKmersQuality() + " " + candidatePath.getCoveringKmersWeight() + " " + candidatePath.getModifiedBases().size());
+			logger.trace("extending " + candidatePath.getKmersQuality() + " " + candidatePath.getCoveringKmersWeight() + " " + candidatePath.getModifiedBases().size());
 			performExtendOutLeft(kmer, sequence, basesTemp, candidatePath, candidatePaths, kmerRC, kmerAux);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("candidatePaths size {}", candidatePaths.size());
+		if (logger.isTraceEnabled()) {
+			logger.trace("candidatePaths size {}", candidatePaths.size());
 			for (CandidatePath path: candidatePaths)
-				logger.debug(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
+				logger.trace(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
 		}
 
 		return modifyErrors(sequence, candidatePaths, basesMod);
@@ -1000,7 +1000,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		int it_alter, it_path, multi, index, max_remaining_changes, checked_changes;
 		CandidatePath candidatePath;
 
-		logger.debug("correctErrors3PrimeEnd {}", index_start);
+		logger.trace("correctErrors3PrimeEnd {}", index_start);
 
 		candidatePaths.clear();
 		candidatePathsTemp.clear();
@@ -1058,14 +1058,14 @@ public class RECKONER extends CorrectionAlgorithm {
 		// for each candidate path
 		for (it_path = 0; it_path < candidatePathsTemp.size(); it_path++) {
 			candidatePath = candidatePathsTemp.get(it_path);
-			logger.debug("extending " +candidatePath.getKmersQuality() + " " + candidatePath.getCoveringKmersWeight() + " " + candidatePath.getModifiedBases().size());
+			logger.trace("extending " +candidatePath.getKmersQuality() + " " + candidatePath.getCoveringKmersWeight() + " " + candidatePath.getModifiedBases().size());
 			performExtendOutRight(kmer, sequence, basesTemp, candidatePath, candidatePaths, kmerRC, kmerAux);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("candidatePaths size {}", candidatePaths.size());
+		if (logger.isTraceEnabled()) {
+			logger.trace("candidatePaths size {}", candidatePaths.size());
 			for (CandidatePath path: candidatePaths)
-				logger.debug(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
+				logger.trace(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
 		}
 
 		return modifyErrors(sequence, candidatePaths, basesMod);
@@ -1098,22 +1098,22 @@ public class RECKONER extends CorrectionAlgorithm {
 			}
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("correctErrorsFirstKmer: lowQsIndexes size {}", lowQsIndexes.size());
+		if (logger.isTraceEnabled()) {
+			logger.trace("correctErrorsFirstKmer: lowQsIndexes size {}", lowQsIndexes.size());
 			for (Short index: lowQsIndexes)
-				logger.debug("lowQsIndex {}, quality {}", index, quals[index]);
+				logger.trace("lowQsIndex {}, quality {}", index, quals[index]);
 		}
 
 		if ((lowQsIndexes.size() <= MAX_LOW_QS_BASES) && (lowQsIndexes.size() > 0)) {
 			// correct errors if the number of low-quality bases is smaller than the threshold
-			logger.debug("low-quality bases is smaller than MAX_LOW_QS_BASES {}", MAX_LOW_QS_BASES);
+			logger.trace("low-quality bases is smaller than MAX_LOW_QS_BASES {}", MAX_LOW_QS_BASES);
 
 			byte[] candidateFastPath = new byte[MAX_CHECK_FIRST_KMER_NESTING];
 			kmerAux.set(firstKmer);
 
 			checkFirstKmer(kmerAux, kmerRC, candidateFastPath, lowQsIndexes, candidatePaths, 0);
 
-			logger.debug("candidatePaths size {}", candidatePaths.size());
+			logger.trace("candidatePaths size {}", candidatePaths.size());
 
 			// no candidate path is found
 			if (candidatePaths.size() == 0) {
@@ -1176,10 +1176,10 @@ public class RECKONER extends CorrectionAlgorithm {
 					}
 				});
 
-				if (logger.isDebugEnabled()) {
-					logger.debug("qualities size {}", qualities.size());
+				if (logger.isTraceEnabled()) {
+					logger.trace("qualities size {}", qualities.size());
 					for (MutablePair<Byte,Short> qual: qualities)
-						logger.debug("{}, {}", qual.right, qual.left);
+						logger.trace("{}, {}", qual.right, qual.left);
 				}
 
 				if (lowQsIndexes.size() == 0) {
@@ -1222,10 +1222,10 @@ public class RECKONER extends CorrectionAlgorithm {
 					for (i = 0; i < min; i++)
 						candidates.add(qualities.get(i).right);
 
-					if (logger.isDebugEnabled()) {
-						logger.debug("candidates size {}", candidates.size());
+					if (logger.isTraceEnabled()) {
+						logger.trace("candidates size {}", candidates.size());
 						for (Short index: candidates)
-							logger.debug("candidate {}", index);
+							logger.trace("candidate {}", index);
 					}
 
 					if (candidates.size() > 0) {
@@ -1239,10 +1239,10 @@ public class RECKONER extends CorrectionAlgorithm {
 			}
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("candidatePaths size {}", candidatePaths.size());
+		if (logger.isTraceEnabled()) {
+			logger.trace("candidatePaths size {}", candidatePaths.size());
 			for (CandidatePath path: candidatePaths)
-				logger.debug(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
+				logger.trace(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
 		}
 
 		if (candidatePaths.size() > MAX_FIRST_KMER_POSSIBILITIES) {
@@ -1277,11 +1277,11 @@ public class RECKONER extends CorrectionAlgorithm {
 				}
 			});
 
-			if (logger.isDebugEnabled()) {
-				logger.debug("rates size {}", rates.size());
+			if (logger.isTraceEnabled()) {
+				logger.trace("rates size {}", rates.size());
 				for (MutablePair<Double,CandidatePath> pair: rates) {
-					logger.debug("rate {}", pair.left);
-					logger.debug(pair.right.getKmersQuality() + " " + pair.right.getCoveringKmersWeight() + " " + pair.right.getModifiedBases().size());
+					logger.trace("rate {}", pair.left);
+					logger.trace(pair.right.getKmersQuality() + " " + pair.right.getCoveringKmersWeight() + " " + pair.right.getModifiedBases().size());
 				}
 			}
 
@@ -1290,10 +1290,10 @@ public class RECKONER extends CorrectionAlgorithm {
 				candidatePaths.add(rates.get(rates.size() - i - 1).right);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("final candidatePaths size {}", candidatePaths.size());
+		if (logger.isTraceEnabled()) {
+			logger.trace("final candidatePaths size {}", candidatePaths.size());
 			for (CandidatePath path: candidatePaths)
-				logger.debug(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
+				logger.trace(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
 		}
 	}
 
@@ -1305,7 +1305,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		byte base;
 		CandidatePath pathTemp;
 
-		logger.debug("checkFirstKmer: index {}", index);
+		logger.trace("checkFirstKmer: index {}", index);
 
 		if (candidatePaths.size() >= MAX_FIRST_KMER_CORRECTION_PATHS)
 			return;
@@ -1344,7 +1344,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		byte base;
 		int multi, it_alter, index = index_kmer + kmerLength;
 
-		logger.debug("extendKmer: index_kmer {}, index_last_mod {}", index_kmer, index_last_mod);
+		logger.trace("extendKmer: index_kmer {}, index_last_mod {}", index_kmer, index_last_mod);
 
 		// generate a new k-mer
 		kmerAux.set(kmer);
@@ -1394,10 +1394,10 @@ public class RECKONER extends CorrectionAlgorithm {
 						tempPath.incCoveringKmersWeight(COVERING_KMERS_WEIGHT);
 						tempPath.addCorrection(new Correction((short)(index), base));
 
-						if (logger.isDebugEnabled()) {
-							logger.debug("corrections after adding tempPath");
+						if (logger.isTraceEnabled()) {
+							logger.trace("corrections after adding tempPath");
 							for (Correction corr: tempPath.getModifiedBases()) {
-								logger.debug("{} {}", corr.getIndex(), corr.getBase());
+								logger.trace("{} {}", corr.getIndex(), corr.getBase());
 							}
 						}
 
@@ -1427,7 +1427,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		int multi = 0, it, it_alter, index;
 		boolean isLowQualityBase = false;
 
-		logger.debug("extendKmer5PrimeEnd: index_kmer {}, nesting {}, max_remaining_changes {}", index_kmer, nesting, max_remaining_changes);
+		logger.trace("extendKmer5PrimeEnd: index_kmer {}, nesting {}, max_remaining_changes {}", index_kmer, nesting, max_remaining_changes);
 
 		if (candidatePaths.size() > MAX_EXTEND_CORRECTION_PATHS)
 			return;
@@ -1473,10 +1473,10 @@ public class RECKONER extends CorrectionAlgorithm {
 
 					candidatePaths.add(candidatePath);
 
-					if (logger.isDebugEnabled()) {
-						logger.debug("candidatePath corrections");
+					if (logger.isTraceEnabled()) {
+						logger.trace("candidatePath corrections");
 						for (Correction corr: candidatePath.getModifiedBases()) {
-							logger.debug("{} {}", corr.getIndex(), corr.getBase());
+							logger.trace("{} {}", corr.getIndex(), corr.getBase());
 						}
 					}
 				} else if ((index_kmer - 1) > 0) {
@@ -1489,7 +1489,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		}
 
 		if ((!isLowQualityBase && multi == 0) || isLowQualityBase) {
-			logger.debug("kmer is not solid or isLowQualityBase {}", isLowQualityBase);
+			logger.trace("kmer is not solid or isLowQualityBase {}", isLowQualityBase);
 
 			// for each nucleotide
 			for (it_alter = Kmer.ABASE; it_alter<Kmer.NUM_NUCLEOTIDES; it_alter++) {
@@ -1533,10 +1533,10 @@ public class RECKONER extends CorrectionAlgorithm {
 
 							candidatePaths.add(candidatePath);
 
-							if (logger.isDebugEnabled()) {
-								logger.debug("candidatePath corrections");
+							if (logger.isTraceEnabled()) {
+								logger.trace("candidatePath corrections");
 								for (Correction corr: candidatePath.getModifiedBases()) {
-									logger.debug("{} {}", corr.getIndex(), corr.getBase());
+									logger.trace("{} {}", corr.getIndex(), corr.getBase());
 								}
 							}
 						} else if ((index_kmer - 1) > 0) {
@@ -1578,7 +1578,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		int multi = 0, it, it_alter, index;
 		boolean isLowQualityBase = false;
 
-		logger.debug("extendKmer3PrimeEnd: index_kmer {}, nesting {}, max_remaining_changes {}", index_kmer, nesting, max_remaining_changes);
+		logger.trace("extendKmer3PrimeEnd: index_kmer {}, nesting {}, max_remaining_changes {}", index_kmer, nesting, max_remaining_changes);
 
 		if (candidatePaths.size() > MAX_EXTEND_CORRECTION_PATHS)
 			return;
@@ -1624,10 +1624,10 @@ public class RECKONER extends CorrectionAlgorithm {
 
 					candidatePaths.add(candidatePath);
 
-					if (logger.isDebugEnabled()) {
-						logger.debug("candidatePath corrections");
+					if (logger.isTraceEnabled()) {
+						logger.trace("candidatePath corrections");
 						for (Correction corr: candidatePath.getModifiedBases()) {
-							logger.debug("{} {}", corr.getIndex(), corr.getBase());
+							logger.trace("{} {}", corr.getIndex(), corr.getBase());
 						}
 					}
 				} else if ((index_kmer + 1) < size) {
@@ -1640,7 +1640,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		}
 
 		if ((!isLowQualityBase && multi == 0) || isLowQualityBase) {
-			logger.debug("kmer is not solid or isLowQualityBase {}", isLowQualityBase);
+			logger.trace("kmer is not solid or isLowQualityBase {}", isLowQualityBase);
 
 			// for each nucleotide
 			for (it_alter = Kmer.ABASE; it_alter<Kmer.NUM_NUCLEOTIDES; it_alter++) {
@@ -1684,10 +1684,10 @@ public class RECKONER extends CorrectionAlgorithm {
 
 							candidatePaths.add(candidatePath);
 
-							if (logger.isDebugEnabled()) {
-								logger.debug("candidatePath corrections");
+							if (logger.isTraceEnabled()) {
+								logger.trace("candidatePath corrections");
 								for (Correction corr: candidatePath.getModifiedBases()) {
-									logger.debug("{} {}", corr.getIndex(), corr.getBase());
+									logger.trace("{} {}", corr.getIndex(), corr.getBase());
 								}
 							}
 						} else if ((index_kmer + 1) < size) {
@@ -1729,7 +1729,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		if (modifiedBases.size() > 0)
 			index_smallest_modified = modifiedBases.get(modifiedBases.size() - 1).getIndex();
 
-		logger.debug("performExtendOutLeft: index_smallest_modified {}", index_smallest_modified);
+		logger.trace("performExtendOutLeft: index_smallest_modified {}", index_smallest_modified);
 
 		if (index_smallest_modified >= kmerLength - 1) {
 			candidatePaths.add(candidatePath);
@@ -1754,7 +1754,7 @@ public class RECKONER extends CorrectionAlgorithm {
 			extend_amount = MAX_EXTEND;
 		}
 
-		logger.debug("extend_amount {}", extend_amount);
+		logger.trace("extend_amount {}", extend_amount);
 
 		// generate an initial k-mer
 		kmer.set(sequence_tmp, 0, kmerLength);
@@ -1796,7 +1796,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		int it_alter, multi;
 		byte kmerLength = getKmerLength();
 
-		logger.debug("extendOutLeft");
+		logger.trace("extendOutLeft");
 
 		// generate an initial k-mer
 		kmerAux.set(kmer);
@@ -1846,7 +1846,7 @@ public class RECKONER extends CorrectionAlgorithm {
 			index_largest_modified = modifiedBases.get(modifiedBases.size() - 1).getIndex();
 		}
 
-		logger.debug("performExtendOutRight: index_largest_modified {}", index_largest_modified);
+		logger.trace("performExtendOutRight: index_largest_modified {}", index_largest_modified);
 
 		if (index_largest_modified <= size) {
 			candidatePaths.add(candidatePath);
@@ -1871,7 +1871,7 @@ public class RECKONER extends CorrectionAlgorithm {
 			extend_amount = MAX_EXTEND;
 		}
 
-		logger.debug("extend_amount {}", extend_amount);
+		logger.trace("extend_amount {}", extend_amount);
 
 		// generate an initial k-mer
 		kmer.set(sequence_tmp, size, kmerLength);
@@ -1913,7 +1913,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		int it_alter, multi;
 		byte kmerLength = getKmerLength();
 
-		logger.debug("extendOutRight");
+		logger.trace("extendOutRight");
 
 		// generate an initial k-mer
 		kmerAux.set(kmer);
@@ -1959,7 +1959,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		// index_smallest_modified
 		index_smallest_modified = modifiedBases.get(0).getIndex();
 
-		logger.debug("solidFirstKmer: index_smallest_modified {}", index_smallest_modified);
+		logger.trace("solidFirstKmer: index_smallest_modified {}", index_smallest_modified);
 
 		// applied the modified bases to first_kmer
 		firstKmer.set(sequenceModified, 0, kmerLength);
@@ -1976,7 +1976,7 @@ public class RECKONER extends CorrectionAlgorithm {
 			extend_amount = MAX_EXTEND;
 		}
 
-		logger.debug("extend_amount {}", extend_amount);
+		logger.trace("extend_amount {}", extend_amount);
 
 		// generate an initial k-mer
 		kmerAux.set(firstKmer);
@@ -2005,7 +2005,7 @@ public class RECKONER extends CorrectionAlgorithm {
 			}
 		}
 
-		logger.debug("extensionSuccess {}", extensionSuccess);
+		logger.trace("extensionSuccess {}", extensionSuccess);
 
 		return extensionSuccess;
 	}
@@ -2023,7 +2023,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		List<CandidatePath> candidatePathsTemp = new ArrayList<CandidatePath>();
 		byte base;
 
-		logger.debug("extendFirstKmerToRight");
+		logger.trace("extendFirstKmerToRight");
 
 		// generate the second k-mer
 		kmer.set(sequenceModified, 1, kmerLength);
@@ -2115,23 +2115,23 @@ public class RECKONER extends CorrectionAlgorithm {
 		// check the solidness of the rightmost k-mers of each modified base
 		// for each candidate path
 		for (CandidatePath path: candidatePathsTemp) {
-			logger.debug("extending " + path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
+			logger.trace("extending " + path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
 			// generate a temporary sequence
 			performExtendOutRight(kmer, sequence, basesTemp, path, candidatePaths, kmerRC, kmerAux);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("candidatePaths size {}", candidatePaths.size());
+		if (logger.isTraceEnabled()) {
+			logger.trace("candidatePaths size {}", candidatePaths.size());
 			for (CandidatePath path: candidatePaths)
-				logger.debug(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
+				logger.trace(path.getKmersQuality() + " " + path.getCoveringKmersWeight() + " " + path.getModifiedBases().size());
 		}
 
 		CandidatePath bestPath = chooseBestCorrection(sequence, candidatePaths);
 
-		if (logger.isDebugEnabled()) {
+		if (logger.isTraceEnabled()) {
 			if (bestPath != null) {
-				logger.debug("correctionSuccess, best path");
-				logger.debug(pathIn.getKmersQuality() + " " + pathIn.getCoveringKmersWeight() + " " + pathIn.getModifiedBases().size());
+				logger.trace("correctionSuccess, best path");
+				logger.trace(pathIn.getKmersQuality() + " " + pathIn.getCoveringKmersWeight() + " " + pathIn.getModifiedBases().size());
 			}
 		}
 
@@ -2154,14 +2154,14 @@ public class RECKONER extends CorrectionAlgorithm {
 				// update sequence
 				index = corr.getIndex();
 				base = corr.getBase();
-				logger.debug("Correction: index {} base {}", index, base);
+				logger.trace("Correction: index {} base {}", index, base);
 				sequenceModified[index] = base;
 				if (basesMod != null)
 					basesMod[index] = base;
 				num_corrected_errors++;
 			}
 
-			logger.debug("modifyErrors: {}", num_corrected_errors);
+			logger.trace("modifyErrors: {}", num_corrected_errors);
 		}
 
 		return num_corrected_errors;
@@ -2185,7 +2185,7 @@ public class RECKONER extends CorrectionAlgorithm {
 				base = corr.getBase();
 
 				if (originalBases[index] != base) {
-					logger.debug("Correction: index {} base {}", index, base);
+					logger.trace("Correction: index {} base {}", index, base);
 					sequenceModified[index] = base;
 					if (basesMod != null)
 						basesMod[index] = base;
@@ -2197,7 +2197,7 @@ public class RECKONER extends CorrectionAlgorithm {
 				}
 			}
 
-			logger.debug("modifyErrorsFistKmer: {},{}", num_corrected_errors1, num_corrected_errors2);
+			logger.trace("modifyErrorsFistKmer: {},{}", num_corrected_errors1, num_corrected_errors2);
 		}
 
 		return num_corrected_errors1 + num_corrected_errors2;
@@ -2207,7 +2207,7 @@ public class RECKONER extends CorrectionAlgorithm {
 	// Chooses the best correction path.
 	//----------------------------------------------------------------------
 	private CandidatePath chooseBestCorrection(Sequence sequence, List<CandidatePath> candidatePaths) {
-		logger.debug("chooseBestCorrection: {} paths", candidatePaths.size());
+		logger.trace("chooseBestCorrection: {} paths", candidatePaths.size());
 
 		if (candidatePaths.size() == 0)
 			return null;
@@ -2265,7 +2265,7 @@ public class RECKONER extends CorrectionAlgorithm {
 			}
 		}
 
-		logger.debug("best_kmer_quality {}", best_kmer_quality);
+		logger.trace("best_kmer_quality {}", best_kmer_quality);
 
 		// correction succeeds
 		if (best_kmer_quality > MIN_BEST_KMER_QUALITY)
