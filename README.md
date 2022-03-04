@@ -48,7 +48,7 @@ These commands accepts any argument to be passed to BigDEC by using --args "BIGD
 * **-c \<file>**. Path to the BigDEC configuration file for advanced settings about the correction algorithms, Spark, Flink and HDFS, among others.
 * **-k \<int>**. k-mer length used for correction. The default value is 21.
 * **-sc \<int>**. Number of input splits per CPU core. The default value is 8.
-* **-m \<dir>**. Merge output files into a single one. The output directory is optional (use *file:/scheme* to specify a local file system as destination instead of HDFS).
+* **-m [\<dir>]**. Merge output files into a single one. The output directory is optional (use *file:/scheme* to specify a local file system as destination instead of HDFS).
 * **-mtoff**. Turn off merger thread.
 * **-h**. Print out the usage of the tool and exit.
 * **-v**. Print out the version of the tool and exit.
