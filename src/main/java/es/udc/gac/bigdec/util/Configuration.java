@@ -51,7 +51,7 @@ public final class Configuration {
 	private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
 
 	private List<CorrectionAlgorithm> correctionAlgorithms;
-	private String ALGORITHMS = "BLESS2";
+	private String ALGORITHMS = "MUSKET";
 	public Short KMER_THRESHOLD = 0;
 	public Boolean KEEP_ORDER = true;
 	public Boolean MULTITHREAD_MERGE = true;
