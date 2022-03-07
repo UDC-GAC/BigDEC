@@ -116,7 +116,7 @@ public class CLIOptions {
 
 		options.addOption(Option.builder("m")
 				.longOpt("merge")
-				.desc("Merge output (output directory is optional. Use file:/ scheme for local file system)")
+				.desc("Merge output (output directory is optional. Use \"file:/\" scheme for local file system)")
 				.argName("dir")
 				.optionalArg(true)
 				.numberOfArgs(1)
@@ -198,7 +198,7 @@ public class CLIOptions {
 	}
 
 	public void printUsage() {
-		helpFormatter.printHelp(87, usage, header, options, footer, false);
+		helpFormatter.printHelp(83, usage, header, options, footer, false);
 	}
 
 	public void parse(String[] args) {
