@@ -59,14 +59,14 @@ public class CLIOptions {
 
 		Option single = Option.builder("s")
 				.longOpt("single")
-				.desc("Input file in FASTQ/FASTA format (single-end mode)")
+				.desc("Input file in FASTQ format (single-end mode)")
 				.argName("file")
 				.hasArg()
 				.numberOfArgs(1)
 				.build();
 		Option paired = Option.builder("p")
 				.longOpt("paired")
-				.desc("Forward and reverse input files in FASTQ/FASTA format (paired-end mode)")
+				.desc("Forward and reverse input files in FASTQ format (paired-end mode)")
 				.argName("file1> <file2")
 				.hasArg()
 				.numberOfArgs(2)
