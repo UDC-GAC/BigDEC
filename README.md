@@ -1,8 +1,8 @@
 # BigDEC: a multi-algorithm Big Data tool for scalable short-read error correction
 
-**BigDEC** is a parallel error corrector intended for short DNA reads that is built upon two popular open-source Big Data frameworks: [Apache Spark](https://spark.apache.org) and [Apache Flink](https://flink.apache.org). This tool supports the processing of single-end and paired-end reads from FASTQ/FASTA datasets stored in the [Hadoop Distributed File System (HDFS)](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html).
+**BigDEC** is a parallel error corrector intended for short DNA reads that is built upon two popular open-source Big Data frameworks: [Apache Spark](https://spark.apache.org) and [Apache Flink](https://flink.apache.org). This tool integrates three different correction algorithms based on the k-mer spectrum method: [Musket](http://musket.sourceforge.net/homepage.htm), [BLESS 2](https://sourceforge.net/projects/bless-ec) and [RECKONER](https://github.com/refresh-bio/RECKONER).
 
-Moreover, BigDEC implements three different correction algorithms based on the k-mer spectrum method: [Musket](http://musket.sourceforge.net/homepage.htm), [BLESS 2](https://sourceforge.net/projects/bless-ec) and [RECKONER](https://github.com/refresh-bio/RECKONER).
+This tool supports the processing of single-end and paired-end reads from FASTQ datasets stored in the [Hadoop Distributed File System (HDFS)](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html).
 
 ## Getting Started
 
@@ -42,8 +42,8 @@ sparkrun|flinkrun --args "BIGDEC_ARGS" [SPARK_ARGS|FLINK_ARGS]
 
 These commands accepts any argument to be passed to BigDEC by using --args "BIGDEC_ARGS" (e.g. --args "-s /path/to/dataset.fastq -k 24"), while the rest of the specified parameters are forwarded to the Spark or Flink runtimes. The command-line arguments available for BigDEC are:
 
-* **-s \<file>**. Compulsory in single-end scenarios. String with the HDFS path to the input sequence file in FASTA/FASTQ format.
-* **-p \<file1> \<file2>**. Compulsory in paired-end scenarios. Two strings with the HDFS paths to the forward and reverse input sequence files in FASTA/FASTQ format.
+* **-s \<file>**. Compulsory in single-end scenarios. String with the HDFS path to the input sequence file in FASTQ format.
+* **-p \<file1> \<file2>**. Compulsory in paired-end scenarios. Two strings with the HDFS paths to the forward and reverse input sequence files in FASTQ format.
 * **-o \<dir>**. Output directory for storing all the corrected files and other stuff required by the tool.
 * **-c \<file>**. Path to the BigDEC configuration file for advanced settings about the correction algorithms, Spark, Flink and HDFS, among others.
 * **-k \<int>**. k-mer length used for correction. The default value is 21.
@@ -83,6 +83,12 @@ The following command corrects a single-end dataset using Spark and specifies th
 
 ```
 sparkrun --args "-s dataset.fastq -c /path/to/config.properties"
+```
+
+The following command corrects a single-end dataset using Flink and 4 input splits per core, while passing extra arguments to Flink runtime:
+
+```
+flinkrun --args "-s dataset.fastq -sc 4" -p 32
 ```
 
 To specify which algorithm(s) to use for correcting the input files, along with their parameters, see the next section.
