@@ -28,7 +28,7 @@ public class RangePartitioner implements Partitioner<LongWritable> {
 	private long partitionSize;
 
 	public RangePartitioner(long maxRange, int numPartitions) {
-		this.partitionSize = maxRange / numPartitions;
+		this.partitionSize = (int) Math.ceil(((double) maxRange) / numPartitions);
 	}
 
 	public long getPartitionSize() {
