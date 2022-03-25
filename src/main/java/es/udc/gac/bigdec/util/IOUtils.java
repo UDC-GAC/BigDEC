@@ -413,7 +413,7 @@ public final class IOUtils {
 		if (dis != null)
 			dis.close();
 
-		return sb.toString().length() + 13;
+		return sb.toString().length() + 15;
 	}
 
 	public static SingleEndSequenceInputFormat getInputFormatInstance(Class<? extends SingleEndSequenceInputFormat> inputFormatClass) {

@@ -317,14 +317,24 @@ public class FlinkDS extends FlinkEC {
 		TextOuputFormat<Sequence> tof = new TextOuputFormat<Sequence>(path, getHadoopConfig());
 
 		// Correct and write reads
-		if (getConfig().KEEP_ORDER)
+		if (getConfig().KEEP_ORDER) {
+			getLogger().info("Range-Partitioner and sortPartition");
+
 			readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
 			.partitionCustom(partitioner, 0).sortPartition(0, Order.ASCENDING)
 			.map(read -> read.f1).withForwardedFields("f1.*->*").output(tof);
-		else
-			readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
-			.partitionCustom(partitioner, 0)
-			.map(read -> read.f1).withForwardedFields("f1.*->*").output(tof);
+		} else {
+			if (getCLIOptions().runMergerThread()) {
+				getLogger().info("Range-Partitioner");
+
+				readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
+				.partitionCustom(partitioner, 0)
+				.map(read -> read.f1).withForwardedFields("f1.*->*").output(tof);
+			} else {
+				readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
+				.map(read -> read.f1).withForwardedFields("f1.*->*").output(tof);
+			}
+		}
 	}
 
 	private void correctPairedDataset(CorrectionAlgorithm algorithm, Path kmersFile) {
@@ -335,12 +345,21 @@ public class FlinkDS extends FlinkEC {
 		DataSet<Tuple3<LongWritable,Sequence,Sequence>> corrReadsDS;
 
 		// Correct and write reads
-		if (getConfig().KEEP_ORDER)
+		if (getConfig().KEEP_ORDER) {
+			getLogger().info("Range-Partitioner and sortPartition");
+
 			corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
-			.partitionCustom(partitioner, 0).sortPartition(0, Order.ASCENDING);
-		else
-			corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
-			.partitionCustom(partitioner, 0);
+					.partitionCustom(partitioner, 0).sortPartition(0, Order.ASCENDING);
+		} else {
+			if (getCLIOptions().runMergerThread()) {
+				getLogger().info("Range-Partitioner");
+
+				corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
+						.partitionCustom(partitioner, 0);
+			} else {
+				corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER));
+			}
+		}
 
 		corrReadsDS.map(read -> read.f1).withForwardedFields("f1.*->*").output(tof1);
 		corrReadsDS.map(read -> read.f2).withForwardedFields("f2.*->*").output(tof2);
