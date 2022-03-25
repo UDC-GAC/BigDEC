@@ -118,8 +118,8 @@ public class RunEC {
 		// Configure HSP library
 		es.udc.gac.hadoop.sequence.parser.util.Configuration.setTrimSequenceName(hadoopConfig, false);
 
-		// Get source file system
-		fs = FileSystem.get(hadoopConfig);
+		// Get file system
+		fs = FileSystem.newInstance(hadoopConfig);
 
 		// Get input path for the first dataset
 		inputPath1 = fs.resolvePath(new Path(options.getInputFile1()));
@@ -145,9 +145,6 @@ public class RunEC {
 		timer.stop(CORRECTION_TIME);
 
 		IOUtils.info("############# OUTPUT #############");
-
-		// Get source file system
-		fs = FileSystem.get(hadoopConfig);
 
 		for(Path outputPath: outputPaths) {
 			logger.debug("outputPath = {}", outputPath);
