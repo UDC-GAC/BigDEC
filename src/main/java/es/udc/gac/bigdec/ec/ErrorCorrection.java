@@ -129,6 +129,10 @@ public abstract class ErrorCorrection {
 		return config;
 	}
 
+	public CLIOptions getCLIOptions() {
+		return options;
+	}
+
 	public byte getKmerLength() {
 		return kmerLength;
 	}
