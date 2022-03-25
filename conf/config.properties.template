@@ -21,8 +21,8 @@ MULTITHREAD_MERGE=true
 # SPARK
 ###################
 # Spark API
-# Supported values: RDD and Dataset|DS
-SPARK_API=DS
+# Supported values: RDD and Dataset
+SPARK_API=Dataset
 
 # Store RDD partitions in serialized form when caching data
 # Only significant when SPARK_API=RDD
@@ -47,8 +47,8 @@ SPARK_SHUFFLE_PARTITIONS=1
 # FLINK
 ###################
 # Flink API
-# Supported values: Dataset|DS
-FLINK_API=DS
+# Supported values: Dataset
+FLINK_API=Dataset
 
 # Enabling the object reuse mode instructs the Flink runtime to reuse
 # user objects for potential better performance

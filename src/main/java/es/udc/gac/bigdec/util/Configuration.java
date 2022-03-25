@@ -113,12 +113,12 @@ public final class Configuration {
 	public Double RECKONER_MAX_CHANGES_IN_REGION_RATIO = 0.5;
 	public Boolean RECKONER_LIMIT_MODIFICATIONS = false;
 
-	public String SPARK_API = "DS";
+	public String SPARK_API = "Dataset";
 	public Boolean SPARK_SERIALIZE_RDD = true;
 	public Boolean SPARK_COMPRESS_DATA = false;
 	public String SPARK_COMPRESSION_CODEC = "lz4";
 	public Integer SPARK_SHUFFLE_PARTITIONS = 1;
-	public String FLINK_API = "DS";
+	public String FLINK_API = "Dataset";
 	public Boolean FLINK_OBJECT_REUSE = true;
 	public Boolean HDFS_DELETE_TEMP_FILES = true;
 	public Integer HDFS_BLOCK_REPLICATION = 1;
@@ -336,8 +336,8 @@ public final class Configuration {
 			throw new RuntimeException("HDFS_BLOCK_REPLICATION="+HDFS_BLOCK_REPLICATION+" must be >= 1");
 		}
 
-		if (!SPARK_API.equalsIgnoreCase("RDD") && !SPARK_API.equalsIgnoreCase("Dataset") && !SPARK_API.equalsIgnoreCase("DS"))
-			throw new RuntimeException("SPARK_API="+SPARK_API+" is invalid. Supported values: RDD and Dataset|DS");
+		if (!SPARK_API.equalsIgnoreCase("RDD") && !SPARK_API.equalsIgnoreCase("Dataset"))
+			throw new RuntimeException("SPARK_API="+SPARK_API+" is invalid. Supported values: RDD and Dataset");
 
 		if (!SPARK_COMPRESSION_CODEC.equalsIgnoreCase("lz4") && !SPARK_COMPRESSION_CODEC.equalsIgnoreCase("snappy"))
 			throw new RuntimeException("SPARK_COMPRESSION_CODEC="+SPARK_COMPRESSION_CODEC+" is invalid. Supported values: lz4 and snappy");
@@ -346,7 +346,7 @@ public final class Configuration {
 			throw new RuntimeException("SPARK_SHUFFLE_PARTITIONS="+SPARK_SHUFFLE_PARTITIONS+" must be >= 1");
 		}
 
-		if (!FLINK_API.equalsIgnoreCase("Dataset") && !FLINK_API.equalsIgnoreCase("DS"))
-			throw new RuntimeException("FLINK_API="+FLINK_API+" is invalid. Supported values: Dataset|DS");
+		if (!FLINK_API.equalsIgnoreCase("Dataset"))
+			throw new RuntimeException("FLINK_API="+FLINK_API+" is invalid. Supported values: Dataset");
 	}
 }

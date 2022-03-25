@@ -99,7 +99,7 @@ public class RunEC {
 		} else if (args[0].equalsIgnoreCase("flink")) {
 			EXECUTION_ENGINE = ExecutionEngine.FLINK_MODE;
 
-			if (config.FLINK_API.equalsIgnoreCase("Dataset") || config.FLINK_API.equalsIgnoreCase("DS")) {
+			if (config.FLINK_API.equalsIgnoreCase("Dataset")) {
 				IOUtils.info("FLINK MODE - Dataset");
 				ec = new FlinkDS(config, options);
 			} else {
