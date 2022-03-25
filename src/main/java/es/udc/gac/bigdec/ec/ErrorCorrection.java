@@ -630,7 +630,7 @@ public abstract class ErrorCorrection {
 	}
 
 	public void mergeOutput(Path outputPath, Path outputFile) throws IOException {
-		FileSystem srcFS = FileSystem.get(hadoopConfig);
+		FileSystem srcFS = FileSystem.newInstance(hadoopConfig);
 		Path mergeOutputPath = new Path(options.getMergeOutputDir());
 		FileSystem dstFS = mergeOutputPath.getFileSystem(hadoopConfig);
 
@@ -650,7 +650,7 @@ public abstract class ErrorCorrection {
 	}
 
 	private Map<String,MergerThread> runMergerThreads(List<Path> outputPaths) throws IOException {
-		FileSystem srcFS = FileSystem.get(hadoopConfig);
+		FileSystem srcFS = FileSystem.newInstance(hadoopConfig);
 		Path mergeOutputPath = new Path(options.getMergeOutputDir());
 		FileSystem dstFS = mergeOutputPath.getFileSystem(hadoopConfig);
 		Map<String,MergerThread> mergerThreads = new HashMap<String,MergerThread>(outputPaths.size());
