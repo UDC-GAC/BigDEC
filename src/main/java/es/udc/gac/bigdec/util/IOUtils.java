@@ -54,8 +54,6 @@ public final class IOUtils {
 	private static final String SEP_CHAR = ":";
 	private static Path OUTPUT_PATH1;
 	private static Path OUTPUT_PATH2;
-	private static FileSystem srcFS;
-	private static FileSystem dstFS;
 	private static long splitSize;
 
 	private IOUtils() {}
@@ -66,14 +64,6 @@ public final class IOUtils {
 
 	public static Path getOutputPath2() {
 		return OUTPUT_PATH2;
-	}
-
-	public static FileSystem getSrcFS() {
-		return srcFS;
-	}
-
-	public static FileSystem getDstFS() {
-		return dstFS;
 	}
 
 	public static long getSplitSize() {
@@ -122,6 +112,7 @@ public final class IOUtils {
 		double blockSizeMB, splitSizeMB;
 		long blocks, nsplits;
 		int splitsPerCore;
+		FileSystem srcFS = null, dstFS = null;
 
 		// Check input paths
 		srcFS = FileSystem.get(hadoopConfig);

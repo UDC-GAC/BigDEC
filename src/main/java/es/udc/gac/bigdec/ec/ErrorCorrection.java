@@ -272,24 +272,26 @@ public abstract class ErrorCorrection {
 		solidKmersPath = new Path(options.getOutputDir()+Configuration.SLASH+"kmers");
 		solidKmersFile = new Path(options.getOutputDir()+Configuration.SLASH+"kmers.solid");
 
-		if (IOUtils.getSrcFS().exists(solidKmersPath))
-			IOUtils.getSrcFS().delete(solidKmersPath, true);
+		FileSystem fs = FileSystem.get(hadoopConfig);
 
-		if (IOUtils.getSrcFS().exists(solidKmersFile))
-			IOUtils.getSrcFS().delete(solidKmersFile, true);
+		if (fs.exists(solidKmersPath))
+			fs.delete(solidKmersPath, true);
 
-		if (IOUtils.getSrcFS().exists(qsHistogramPath))
-			IOUtils.getSrcFS().delete(qsHistogramPath, true);
+		if (fs.exists(solidKmersFile))
+			fs.delete(solidKmersFile, true);
 
-		if (IOUtils.getSrcFS().exists(kmerHistogramPath))
-			IOUtils.getSrcFS().delete(kmerHistogramPath, true);
+		if (fs.exists(qsHistogramPath))
+			fs.delete(qsHistogramPath, true);
+
+		if (fs.exists(kmerHistogramPath))
+			fs.delete(kmerHistogramPath, true);
 
 		/*
 		 * Detect file input format and compression
 		 */
 		fileFormat = IOUtils.getInputFileFormat(hadoopConfig, inputFile1);
 		compressOutput = IOUtils.isPathCompressed(hadoopConfig, inputFile1);
-		sequenceSize = IOUtils.getFirstSequenceSize(IOUtils.getSrcFS(), inputFile1);
+		sequenceSize = IOUtils.getFirstSequenceSize(fs, inputFile1);
 		this.nsplits = nsplits;
 
 		if (compressOutput) {
@@ -370,12 +372,13 @@ public abstract class ErrorCorrection {
 
 	private void analyzeHistograms() throws IOException {
 		List<CorrectionAlgorithm> remove = new ArrayList<CorrectionAlgorithm>();
+		FileSystem fs = FileSystem.get(hadoopConfig);
 
 		if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE) {
 			if (buildQsHistrogram)
-				qsHistogram = IOUtils.loadHistogram(IOUtils.getSrcFS(), qsHistogramPath, QS_HISTOGRAM_SIZE, false);
+				qsHistogram = IOUtils.loadHistogram(fs, qsHistogramPath, QS_HISTOGRAM_SIZE, false);
 
-			kmerHistogram = IOUtils.loadHistogram(IOUtils.getSrcFS(), kmerHistogramPath, KMER_HISTOGRAM_SIZE, false);
+			kmerHistogram = IOUtils.loadHistogram(fs, kmerHistogramPath, KMER_HISTOGRAM_SIZE, false);
 		}
 
 		/*
@@ -383,9 +386,9 @@ public abstract class ErrorCorrection {
 		 */
 		for (CorrectionAlgorithm algorithm: correctionAlgorithms) {
 			try {
-				algorithm.determineQsOffset(IOUtils.getSrcFS(), inputFile1);
+				algorithm.determineQsOffset(fs, inputFile1);
 				if (isPaired())
-					algorithm.determineQsOffset(IOUtils.getSrcFS(), inputFile2);
+					algorithm.determineQsOffset(fs, inputFile2);
 
 				algorithm.determineQsCutoff(qsHistogram);
 			} catch (CorrectionAlgorithmException e) {
@@ -405,7 +408,7 @@ public abstract class ErrorCorrection {
 		 * Write the quality score histogram to a file
 		 */
 		if (qsHistogram != null)
-			IOUtils.writeHistogram(IOUtils.getSrcFS(), qsHistogramPath, qsHistogram, 0, QS_HISTOGRAM_SIZE);
+			IOUtils.writeHistogram(fs, qsHistogramPath, qsHistogram, 0, QS_HISTOGRAM_SIZE);
 
 		/*
 		 * Analyze the k-mer histogram to determine the k-mer occurrence threshold
@@ -448,7 +451,7 @@ public abstract class ErrorCorrection {
 		/*
 		 * Write the k-mer histogram to a file
 		 */
-		long nkmers = IOUtils.writeHistogram(IOUtils.getSrcFS(), kmerHistogramPath, kmerHistogram, 0, KMER_HISTOGRAM_SIZE);
+		long nkmers = IOUtils.writeHistogram(fs, kmerHistogramPath, kmerHistogram, 0, KMER_HISTOGRAM_SIZE);
 
 		if (config.KMER_THRESHOLD != 0) {
 			IOUtils.info("k-mer threshold = "+config.KMER_THRESHOLD);
@@ -499,7 +502,7 @@ public abstract class ErrorCorrection {
 
 		// Merge k-mer files
 		try {
-			FileSystem fs = IOUtils.getSrcFS();
+			FileSystem fs = FileSystem.get(hadoopConfig);
 
 			if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE && getParallelism() == 1) {
 				fs.rename(getSolidKmersPath(), getSolidKmersFile());
@@ -627,8 +630,12 @@ public abstract class ErrorCorrection {
 	}
 
 	public void mergeOutput(Path outputPath, Path outputFile) throws IOException {
+		FileSystem srcFS = FileSystem.get(hadoopConfig);
+		Path mergeOutputPath = new Path(options.getMergeOutputDir());
+		FileSystem dstFS = mergeOutputPath.getFileSystem(hadoopConfig);
+
 		// Get sorted list of files to merge
-		List<Path> inputFiles = RunMerge.getFiles(IOUtils.getSrcFS(), outputPath, true);
+		List<Path> inputFiles = RunMerge.getFiles(srcFS, outputPath, true);
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Files to merge");
@@ -638,11 +645,14 @@ public abstract class ErrorCorrection {
 		}
 
 		// Merge files
-		RunMerge.merge(IOUtils.getSrcFS(), outputPath, inputFiles, IOUtils.getDstFS(), outputFile,
+		RunMerge.merge(srcFS, outputPath, inputFiles, dstFS, outputFile,
 				config.HDFS_BLOCK_REPLICATION, config.HDFS_DELETE_TEMP_FILES, hadoopConfig);
 	}
 
-	private Map<String,MergerThread> runMergerThreads(List<Path> outputPaths) {
+	private Map<String,MergerThread> runMergerThreads(List<Path> outputPaths) throws IOException {
+		FileSystem srcFS = FileSystem.get(hadoopConfig);
+		Path mergeOutputPath = new Path(options.getMergeOutputDir());
+		FileSystem dstFS = mergeOutputPath.getFileSystem(hadoopConfig);
 		Map<String,MergerThread> mergerThreads = new HashMap<String,MergerThread>(outputPaths.size());
 		Path done = new Path("done");
 		long outputFiles;
@@ -654,7 +664,7 @@ public abstract class ErrorCorrection {
 			outputFiles = getParallelism();
 
 		if (!config.MULTITHREAD_MERGE) {
-			MergerThread mergerThread = new MergerThread(IOUtils.getSrcFS(), IOUtils.getDstFS(), outputPaths, null,
+			MergerThread mergerThread = new MergerThread(srcFS, dstFS, outputPaths, null,
 					outputFile1, outputFile2, outputFiles, done, true, fileSize, config, hadoopConfig);
 
 			mergerThreads.put("ALL", mergerThread);
@@ -670,7 +680,7 @@ public abstract class ErrorCorrection {
 				if (RunEC.EXECUTION_ENGINE == ExecutionEngine.SPARK_MODE)
 					queue = new ArrayBlockingQueue<Path>(1);
 
-				mergerThread = new MergerThread(IOUtils.getSrcFS(), IOUtils.getDstFS(), paths, queue,
+				mergerThread = new MergerThread(srcFS, dstFS, paths, queue,
 						outputFile1, outputFile2, outputFiles, done, true, fileSize, config, hadoopConfig);
 
 				mergerThreads.put(algorithm.getOutputPath1().toString(), mergerThread);
@@ -683,7 +693,7 @@ public abstract class ErrorCorrection {
 					if (RunEC.EXECUTION_ENGINE == ExecutionEngine.SPARK_MODE)
 						pairedQueue = new ArrayBlockingQueue<Path>(1);
 
-					mergerThread = new MergerThread(IOUtils.getSrcFS(), IOUtils.getDstFS(), paths, pairedQueue,
+					mergerThread = new MergerThread(srcFS, dstFS, paths, pairedQueue,
 							outputFile1, outputFile2, outputFiles, done, true, fileSize, config, hadoopConfig);
 
 					mergerThreads.put(algorithm.getOutputPath2().toString(), mergerThread);

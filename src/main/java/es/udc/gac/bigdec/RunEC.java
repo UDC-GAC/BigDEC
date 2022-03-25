@@ -65,7 +65,7 @@ public class RunEC {
 
 		// Load configuration
 		Configuration config = new Configuration();
-		
+
 		IOUtils.info(RunEC.APP_NAME+" "+Configuration.VERSION);
 		logger.debug("args = {}", Arrays.toString(args));
 
@@ -119,7 +119,7 @@ public class RunEC {
 		es.udc.gac.hadoop.sequence.parser.util.Configuration.setTrimSequenceName(hadoopConfig, false);
 
 		// Get source file system
-		fs = IOUtils.getSrcFS();
+		fs = FileSystem.get(hadoopConfig);
 
 		// Get input path for the first dataset
 		inputPath1 = fs.resolvePath(new Path(options.getInputFile1()));
@@ -145,6 +145,9 @@ public class RunEC {
 		timer.stop(CORRECTION_TIME);
 
 		IOUtils.info("############# OUTPUT #############");
+
+		// Get source file system
+		fs = FileSystem.get(hadoopConfig);
 
 		for(Path outputPath: outputPaths) {
 			logger.debug("outputPath = {}", outputPath);
