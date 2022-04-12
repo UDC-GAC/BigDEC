@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with BigDEC. If not, see <http://www.gnu.org/licenses/>.
  */
-package es.udc.gac.bigdec.ec.flink.ds;
+package es.udc.gac.bigdec.ec.flink.stream;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,14 +24,14 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.flink.api.common.JobExecutionResult;
+import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.operators.Order;
-import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.ExecutionEnvironment;
-import org.apache.flink.api.java.io.DiscardingOutputFormat;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -62,20 +62,21 @@ import es.udc.gac.hadoop.sequence.parser.mapreduce.PairText;
 import es.udc.gac.hadoop.sequence.parser.mapreduce.PairedEndSequenceInputFormat;
 import es.udc.gac.hadoop.sequence.parser.mapreduce.SingleEndSequenceInputFormat;
 
-public class FlinkDS extends FlinkEC {
+public class FlinkDStream extends FlinkEC {
 
-	private ExecutionEnvironment flinkExecEnv;
+	private StreamExecutionEnvironment flinkExecEnv;
 	private Job hadoopJob;
-	private DataSet<Tuple2<LongWritable,Sequence>> readsDS;
-	private DataSet<Tuple3<LongWritable,Sequence,Sequence>> pairedReadsDS;
-	private DataSet<Tuple2<Kmer,Integer>> kmersDS;
+	private DataStream<Tuple2<LongWritable,Sequence>> readsDS;
+	private DataStream<Tuple3<LongWritable,Sequence,Sequence>> pairedReadsDS;
+	private DataStream<Tuple2<Kmer,Integer>> kmersDS;
 	private RangePartitioner partitioner;
 
-	public FlinkDS(Configuration config, CLIOptions options) {
+	public FlinkDStream(Configuration config, CLIOptions options) {
 		super(config, options);
 
 		// Get Flink execution environment
-		flinkExecEnv = ExecutionEnvironment.getExecutionEnvironment();
+		flinkExecEnv = StreamExecutionEnvironment.getExecutionEnvironment();
+		flinkExecEnv.setRuntimeMode(RuntimeExecutionMode.BATCH);
 
 		if(config.FLINK_OBJECT_REUSE)
 			flinkExecEnv.getConfig().enableObjectReuse();
@@ -115,8 +116,9 @@ public class FlinkDS extends FlinkEC {
 			SingleEndSequenceInputFormat inputFormat = IOUtils.getInputFormatInstance(getInputFormatClass());
 			SingleEndSequenceInputFormat.setInputPaths(hadoopJob, getInputFile1());
 			HadoopFileInputFormat<LongWritable,Text> hadoopIF = new HadoopFileInputFormat<LongWritable,Text>(inputFormat, LongWritable.class, Text.class, hadoopJob);
+			hadoopIF.setFilePath(getInputFile1().toString());
 
-			DataSet<Tuple2<LongWritable,Text>> inputDS = flinkExecEnv.createInput(hadoopIF);
+			DataStream<Tuple2<LongWritable,Text>> inputDS = flinkExecEnv.createInput(hadoopIF);
 
 			readsDS = FlinkEC.parseSingleDS(inputDS, parser);
 		} else {
@@ -124,8 +126,9 @@ public class FlinkDS extends FlinkEC {
 			PairedEndSequenceInputFormat.setLeftInputPath(getHadoopConfig(), getInputFile1(), getInputFormatClass());
 			PairedEndSequenceInputFormat.setRightInputPath(getHadoopConfig(), getInputFile2(), getInputFormatClass());
 			HadoopFileInputFormat<LongWritable,PairText> hadoopIF = new HadoopFileInputFormat<LongWritable,PairText>(new PairedEndSequenceInputFormat(), LongWritable.class, PairText.class, hadoopJob);
+			hadoopIF.setFilePath(getInputFile1().toString());
 
-			DataSet<Tuple2<LongWritable,PairText>> inputDS = flinkExecEnv.createInput(hadoopIF);
+			DataStream<Tuple2<LongWritable,PairText>> inputDS = flinkExecEnv.createInput(hadoopIF);
 
 			pairedReadsDS = FlinkEC.parsePairedDS(inputDS, parser);
 		}
@@ -134,9 +137,9 @@ public class FlinkDS extends FlinkEC {
 	@Override
 	protected int[] buildQsHistogram() throws IOException {
 		if (!isPaired())
-			readsDS.map(new QsHistogramSingle(FlinkEC.qsHistogram)).output(new DiscardingOutputFormat<>());
+			readsDS.map(new QsHistogramSingle(FlinkEC.qsHistogram));
 		else
-			pairedReadsDS.map(new QsHistogramPaired(FlinkEC.qsHistogram)).output(new DiscardingOutputFormat<>());
+			pairedReadsDS.map(new QsHistogramPaired(FlinkEC.qsHistogram));
 
 		return null;
 	}
@@ -149,14 +152,14 @@ public class FlinkDS extends FlinkEC {
 			kmersDS = pairedReadsDS.flatMap(new KmerGenPaired(getKmerLength(), isIgnoreNBases()));
 		}
 
-		kmersDS = kmersDS.groupBy(0).sum(1).filter(new FilterFunction<Tuple2<Kmer,Integer>>() {
+		kmersDS = kmersDS.keyBy(kmer -> kmer.f0).sum(1).filter(new FilterFunction<Tuple2<Kmer,Integer>>() {
 			private static final long serialVersionUID = 2720097123780600026L;
 
 			@Override
 			public boolean filter(Tuple2<Kmer,Integer> kmer) {
 				return kmer.f1 >= minKmerCounter;
 			}
-		}).withForwardedFields("f0;f1");
+		});
 	}
 
 	@Override
@@ -165,7 +168,7 @@ public class FlinkDS extends FlinkEC {
 		TreeMap<Integer, Integer> treeMap = null;
 		int[] kmerHistogram = new int[ErrorCorrection.KMER_HISTOGRAM_SIZE];
 
-		kmersDS.map(new KmerHistogram(ErrorCorrection.KMER_HISTOGRAM_SIZE, FlinkEC.kmerHistogram)).output(new DiscardingOutputFormat<>());
+		kmersDS.map(new KmerHistogram(ErrorCorrection.KMER_HISTOGRAM_SIZE, FlinkEC.kmerHistogram));
 
 		try {
 			result = flinkExecEnv.execute();
@@ -272,18 +275,18 @@ public class FlinkDS extends FlinkEC {
 			getLogger().info("Range-Partitioner and sortPartition");
 
 			readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
-			.partitionCustom(partitioner, 0).sortPartition(0, Order.ASCENDING)
-			.map(read -> read.f1).withForwardedFields("f1.*->*").output(tof);
+			.partitionCustom(partitioner, 0)
+			.map(read -> read.f1).writeUsingOutputFormat(tof);
 		} else {
 			if (getCLIOptions().runMergerThread()) {
 				getLogger().info("Range-Partitioner");
 
 				readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
 				.partitionCustom(partitioner, 0)
-				.map(read -> read.f1).withForwardedFields("f1.*->*").output(tof);
+				.map(read -> read.f1).writeUsingOutputFormat(tof);
 			} else {
 				readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
-				.map(read -> read.f1).withForwardedFields("f1.*->*").output(tof);
+				.map(read -> read.f1).writeUsingOutputFormat(tof);
 			}
 		}
 	}
@@ -293,14 +296,14 @@ public class FlinkDS extends FlinkEC {
 		org.apache.flink.core.fs.Path path2 = new org.apache.flink.core.fs.Path(algorithm.getOutputPath2().toString());
 		TextOuputFormat<Sequence> tof1 = new TextOuputFormat<Sequence>(path1, getHadoopConfig());
 		TextOuputFormat<Sequence> tof2 = new TextOuputFormat<Sequence>(path2, getHadoopConfig());
-		DataSet<Tuple3<LongWritable,Sequence,Sequence>> corrReadsDS;
+		DataStream<Tuple3<LongWritable,Sequence,Sequence>> corrReadsDS;
 
 		// Correct and write reads
 		if (getConfig().KEEP_ORDER) {
 			getLogger().info("Range-Partitioner and sortPartition");
 
 			corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
-					.partitionCustom(partitioner, 0).sortPartition(0, Order.ASCENDING);
+					.partitionCustom(partitioner, 0);
 		} else {
 			if (getCLIOptions().runMergerThread()) {
 				getLogger().info("Range-Partitioner");
@@ -312,7 +315,7 @@ public class FlinkDS extends FlinkEC {
 			}
 		}
 
-		corrReadsDS.map(read -> read.f1).withForwardedFields("f1.*->*").output(tof1);
-		corrReadsDS.map(read -> read.f2).withForwardedFields("f2.*->*").output(tof2);
+		corrReadsDS.map(read -> read.f1).writeUsingOutputFormat(tof1);
+		corrReadsDS.map(read -> read.f2).writeUsingOutputFormat(tof2);
 	}
 }

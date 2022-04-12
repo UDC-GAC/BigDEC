@@ -339,7 +339,7 @@ public final class IOUtils {
 
 		try {
 			if (!fs.exists(path))
-				IOUtils.error("Histogram file path not found: "+path);
+				IOUtils.error("Histogram file not found: "+path);
 
 			if (fs.isDirectory(path))
 				file = new Path(path+Configuration.SLASH+fs.listStatus(path)[0].getPath().getName());				

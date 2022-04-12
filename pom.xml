@@ -18,7 +18,7 @@
 	</licenses>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<hadoop-sequence-parser.version>1.2</hadoop-sequence-parser.version>
+		<hadoop-sequence-parser.version>1.3</hadoop-sequence-parser.version>
 		<spark.version>3.0.0</spark.version>
 		<flink.version>1.12.0</flink.version>
 		<scala.binary.version>2.12</scala.binary.version>

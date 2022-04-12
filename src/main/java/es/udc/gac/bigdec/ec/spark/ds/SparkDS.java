@@ -112,7 +112,7 @@ public class SparkDS extends SparkEC {
 	}
 
 	@Override
-	protected int[] buildQsHistogram() {
+	protected int[] buildQsHistogram() throws IOException {
 		int[] qsHistogram = null;
 
 		if (!isPaired()) {
@@ -154,7 +154,7 @@ public class SparkDS extends SparkEC {
 		kmersDS.persist(StorageLevel.MEMORY_ONLY());
 	}
 
-	protected int[] buildKmerHistrogram() {
+	protected int[] buildKmerHistrogram() throws IOException {
 		return kmersDS.mapPartitions(new KmerHistogram(ErrorCorrection.KMER_HISTOGRAM_SIZE), intArrayEncoder)
 				.reduce((org.apache.spark.api.java.function.ReduceFunction<int[]>) (x, y) -> {
 					for (int i=0;i<x.length;i++)

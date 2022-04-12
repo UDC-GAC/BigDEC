@@ -16,14 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with BigDEC. If not, see <http://www.gnu.org/licenses/>.
  */
-package es.udc.gac.bigdec.ec.flink.ds;
+package es.udc.gac.bigdec.ec.flink;
 
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.hadoop.io.LongWritable;
 
 import es.udc.gac.bigdec.ec.CorrectionAlgorithm;
-import es.udc.gac.bigdec.ec.flink.KmerMap;
 import es.udc.gac.bigdec.sequence.Sequence;
 
 public class CorrectPaired extends RichMapFunction<Tuple3<LongWritable,Sequence,Sequence>,Tuple3<LongWritable,Sequence,Sequence>> {

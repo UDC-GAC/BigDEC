@@ -346,7 +346,7 @@ public final class Configuration {
 			throw new RuntimeException("SPARK_SHUFFLE_PARTITIONS="+SPARK_SHUFFLE_PARTITIONS+" must be >= 1");
 		}
 
-		if (!FLINK_API.equalsIgnoreCase("Dataset"))
-			throw new RuntimeException("FLINK_API="+FLINK_API+" is invalid. Supported values: Dataset");
+		if (!FLINK_API.equalsIgnoreCase("Dataset") && !FLINK_API.equalsIgnoreCase("Datastream"))
+			throw new RuntimeException("FLINK_API="+FLINK_API+" is invalid. Supported values: Dataset and Datastream");
 	}
 }

@@ -232,6 +232,14 @@ public abstract class ErrorCorrection {
 		return sequenceSize;
 	}
 
+	public void setKmerHistogram(int[] histogram) {
+		kmerHistogram = histogram;
+	}
+
+	public void setQsHistogram(int[] histogram) {
+		qsHistogram = histogram;
+	}
+
 	public void putMergePath(Path path) {
 		if (mergerThreads != null && config.MULTITHREAD_MERGE) {
 			try {
@@ -243,9 +251,9 @@ public abstract class ErrorCorrection {
 	}
 
 	protected abstract void createDatasets() throws IOException;
-	protected abstract int[] buildQsHistogram();
+	protected abstract int[] buildQsHistogram() throws IOException;
 	protected abstract void kmerCounting(short minKmerCounter, short maxKmerCounter);
-	protected abstract int[] buildKmerHistrogram();
+	protected abstract int[] buildKmerHistrogram() throws IOException;
 	protected abstract void writeSolidKmersAsCSV(short kmerThreshold, short maxKmerCounter);
 	protected abstract void loadSolidKmers(int numberOfSolidKmers);
 	protected abstract void filterSolidKmers(short kmerThreshold);
@@ -375,10 +383,11 @@ public abstract class ErrorCorrection {
 		FileSystem fs = FileSystem.get(hadoopConfig);
 
 		if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE) {
-			if (buildQsHistrogram)
+			if (buildQsHistrogram && qsHistogram == null)
 				qsHistogram = IOUtils.loadHistogram(fs, qsHistogramPath, QS_HISTOGRAM_SIZE, false);
 
-			kmerHistogram = IOUtils.loadHistogram(fs, kmerHistogramPath, KMER_HISTOGRAM_SIZE, false);
+			if (kmerHistogram == null)
+				kmerHistogram = IOUtils.loadHistogram(fs, kmerHistogramPath, KMER_HISTOGRAM_SIZE, false);
 		}
 
 		/*
@@ -401,14 +410,14 @@ public abstract class ErrorCorrection {
 		if(!remove.isEmpty())
 			correctionAlgorithms.removeAll(remove);
 
-		if(correctionAlgorithms.isEmpty())
-			IOUtils.error("No correction algorithms available to continue");
-
 		/*
 		 * Write the quality score histogram to a file
 		 */
 		if (qsHistogram != null)
 			IOUtils.writeHistogram(fs, qsHistogramPath, qsHistogram, 0, QS_HISTOGRAM_SIZE);
+
+		if(correctionAlgorithms.isEmpty())
+			IOUtils.error("No correction algorithms available to continue");
 
 		/*
 		 * Analyze the k-mer histogram to determine the k-mer occurrence threshold
@@ -445,9 +454,6 @@ public abstract class ErrorCorrection {
 		if(!remove.isEmpty())
 			correctionAlgorithms.removeAll(remove);
 
-		if(correctionAlgorithms.isEmpty())
-			IOUtils.error("No correction algorithms available to continue");
-
 		/*
 		 * Write the k-mer histogram to a file
 		 */
@@ -459,6 +465,9 @@ public abstract class ErrorCorrection {
 		} else {
 			IOUtils.info("number of counted k-mers = "+nkmers);
 		}
+
+		if(correctionAlgorithms.isEmpty())
+			IOUtils.error("No correction algorithms available to continue");
 	}
 
 	public List<Path> correctErrors(Path outputPath1, Path outputPath2) throws IOException {

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import es.udc.gac.bigdec.ec.ErrorCorrection;
 import es.udc.gac.bigdec.ec.flink.ds.FlinkDS;
+import es.udc.gac.bigdec.ec.flink.stream.FlinkDStream;
 import es.udc.gac.bigdec.ec.spark.ds.SparkDS;
 import es.udc.gac.bigdec.ec.spark.rdd.SparkRDD;
 import es.udc.gac.bigdec.util.CLIOptions;
@@ -103,7 +104,8 @@ public class RunEC {
 				IOUtils.info("FLINK MODE - Dataset");
 				ec = new FlinkDS(config, options);
 			} else {
-				IOUtils.error("Invalid Flink API: "+config.FLINK_API);
+				IOUtils.info("FLINK MODE - Datastream");
+				ec = new FlinkDStream(config, options);
 			}
 		} else {
 			IOUtils.error("Invalid execution mode: "+args[0]);

@@ -34,7 +34,8 @@ import es.udc.gac.hadoop.sequence.parser.mapreduce.PairText;
 
 public abstract class FlinkEC extends ErrorCorrection {
 
-	protected static final double MAX_SPLITS = 1.25;
+	protected static final String qsHistogram = "qsHistogram";
+	protected static final String kmerHistogram = "kmerHistogram";
 
 	public FlinkEC(Configuration config, CLIOptions options) {
 		super(config, options);

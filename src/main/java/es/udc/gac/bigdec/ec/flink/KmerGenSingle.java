@@ -16,12 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with BigDEC. If not, see <http://www.gnu.org/licenses/>.
  */
-package es.udc.gac.bigdec.ec.flink.ds;
+package es.udc.gac.bigdec.ec.flink;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.functions.FunctionAnnotation.ReadFields;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
 import org.apache.hadoop.io.LongWritable;
 
@@ -29,8 +28,8 @@ import es.udc.gac.bigdec.kmer.Kmer;
 import es.udc.gac.bigdec.kmer.KmerGenerator;
 import es.udc.gac.bigdec.sequence.Sequence;
 
-@ReadFields("f1.*;f2.*")
-public class KmerGenPaired implements FlatMapFunction<Tuple3<LongWritable,Sequence,Sequence>, Tuple2<Kmer,Integer>> {
+@ReadFields("f1.*")
+public class KmerGenSingle implements FlatMapFunction<Tuple2<LongWritable,Sequence>, Tuple2<Kmer,Integer>> {
 
 	private static final long serialVersionUID = -7335452060418754060L;
 	private static final int ONE = Integer.valueOf("1");
@@ -39,7 +38,7 @@ public class KmerGenPaired implements FlatMapFunction<Tuple3<LongWritable,Sequen
 	private Tuple2<Kmer,Integer> tuple2;
 	private boolean ignoreNBases;
 
-	public KmerGenPaired(byte kmerLength, boolean ignoreNBases) {
+	public KmerGenSingle(byte kmerLength, boolean ignoreNBases) {
 		this.kmerLength = kmerLength;
 		this.tuple2 = new Tuple2<Kmer,Integer>();
 		this.tuple2.setField(ONE, 1);
@@ -47,13 +46,11 @@ public class KmerGenPaired implements FlatMapFunction<Tuple3<LongWritable,Sequen
 	}
 
 	@Override
-	public void flatMap(Tuple3<LongWritable,Sequence,Sequence> pairedSequence, Collector<Tuple2<Kmer, Integer>> out) throws Exception {
+	public void flatMap(Tuple2<LongWritable,Sequence> sequence, Collector<Tuple2<Kmer,Integer>> out) throws Exception {
 		Kmer kmer = KmerGenerator.createKmer();
 		Kmer kmerRC = KmerGenerator.createKmer();
 
-		// Generate all k-mers for the left read
-		KmerGenerator.generateFlinkKmers(pairedSequence.f1, kmer, kmerRC, kmerLength, tuple2, ignoreNBases, out);
-		// Generate all k-mers for the right read
-		KmerGenerator.generateFlinkKmers(pairedSequence.f2, kmer, kmerRC, kmerLength, tuple2, ignoreNBases, out);
+		// Generate all k-mers for this read
+		KmerGenerator.generateFlinkKmers(sequence.f1, kmer, kmerRC, kmerLength, tuple2, ignoreNBases, out);
 	}
 }

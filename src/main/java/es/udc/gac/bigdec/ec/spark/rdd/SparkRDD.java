@@ -95,7 +95,7 @@ public class SparkRDD extends SparkEC {
 	}
 
 	@Override
-	protected int[] buildQsHistogram() {
+	protected int[] buildQsHistogram() throws IOException {
 		int[] qsHistogram = null;
 
 		if (!isPaired()) {
@@ -140,7 +140,7 @@ public class SparkRDD extends SparkEC {
 	}
 
 	@Override
-	protected int[] buildKmerHistrogram() {
+	protected int[] buildKmerHistrogram() throws IOException {
 		return kmersRDD.mapPartitions(new KmerHistogram(ErrorCorrection.KMER_HISTOGRAM_SIZE))
 				.reduce((x, y) -> {
 					for (int i=0;i<x.length;i++)
