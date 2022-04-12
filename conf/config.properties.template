@@ -47,8 +47,8 @@ SPARK_SHUFFLE_PARTITIONS=1
 # FLINK
 ###################
 # Flink API
-# Supported values: Dataset
-FLINK_API=Dataset
+# Supported values: Dataset and Datastream
+FLINK_API=Datastream
 
 # Enabling the object reuse mode instructs the Flink runtime to reuse
 # user objects for potential better performance
