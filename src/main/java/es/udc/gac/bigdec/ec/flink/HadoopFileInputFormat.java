@@ -115,21 +115,21 @@ public class HadoopFileInputFormat<K, V> extends FileInputFormat<Tuple2<K, V>> i
 				(cachedStats instanceof FileBaseStatistics)
 				? (FileBaseStatistics) cachedStats : null;
 
-				try {
-					final org.apache.hadoop.fs.Path[] paths = org.apache.hadoop.mapreduce.lib.input.FileInputFormat.getInputPaths(jobContext);
-					return getFileStats(cachedFileStats, paths, new ArrayList<FileStatus>(1));
-				} catch (IOException ioex) {
-					if (logger.isWarnEnabled()) {
-						logger.warn("Could not determine statistics due to an I/O error: " + ioex.getMessage());
-					}
-				} catch (Throwable t) {
-					if (logger.isErrorEnabled()) {
-						logger.error("Unexpected problem while getting the file statistics: " + t.getMessage(), t);
-					}
-				}
+		try {
+			final org.apache.hadoop.fs.Path[] paths = org.apache.hadoop.mapreduce.lib.input.FileInputFormat.getInputPaths(jobContext);
+			return getFileStats(cachedFileStats, paths, new ArrayList<FileStatus>(1));
+		} catch (IOException ioex) {
+			if (logger.isWarnEnabled()) {
+				logger.warn("Could not determine statistics due to an I/O error: " + ioex.getMessage());
+			}
+		} catch (Throwable t) {
+			if (logger.isErrorEnabled()) {
+				logger.error("Unexpected problem while getting the file statistics: " + t.getMessage(), t);
+			}
+		}
 
-				// no statistics available
-				return null;
+		// no statistics available
+		return null;
 	}
 
 	@Override
@@ -354,7 +354,7 @@ public class HadoopFileInputFormat<K, V> extends FileInputFormat<Tuple2<K, V>> i
 					Class.forName(
 							hadoopInputFormatClassName,
 							true,
-							Thread.currentThread().getContextClassLoader()).newInstance();
+							Thread.currentThread().getContextClassLoader()).getDeclaredConstructor().newInstance();
 		} catch (Exception e) {
 			throw new RuntimeException("Unable to instantiate the hadoop input format", e);
 		}
