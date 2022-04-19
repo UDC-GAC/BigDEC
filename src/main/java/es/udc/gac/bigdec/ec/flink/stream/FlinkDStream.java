@@ -240,6 +240,11 @@ public class FlinkDStream extends FlinkEC {
 
 	@Override
 	protected void runErrorCorrection(List<CorrectionAlgorithm> correctionAlgorithms) {
+		if (!isPaired())
+			readsDS = getSingleDatastream();
+		else
+			pairedReadsDS = getPairedDatastream();
+
 		/*
 		 *  For each correction algorithm
 		 */
@@ -271,21 +276,7 @@ public class FlinkDStream extends FlinkEC {
 		TextOuputFormat<Sequence> tof = new TextOuputFormat<Sequence>(path, getHadoopConfig());
 
 		// Correct and write reads
-		if (getConfig().KEEP_ORDER) {
-			getLogger().info("Range-Partitioner and sortPartition");
-
-			readsDS.partitionCustom(partitioner, 0)
-			.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER)).writeUsingOutputFormat(tof);
-		} else {
-			if (getCLIOptions().runMergerThread()) {
-				getLogger().info("Range-Partitioner");
-
-				readsDS.partitionCustom(partitioner, 0)
-				.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER)).writeUsingOutputFormat(tof);
-			} else {
-				readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER)).writeUsingOutputFormat(tof);
-			}
-		}
+		readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER)).writeUsingOutputFormat(tof);
 	}
 
 	private void correctPairedDataset(CorrectionAlgorithm algorithm, Path kmersFile) {
@@ -296,25 +287,32 @@ public class FlinkDStream extends FlinkEC {
 		DataStream<Tuple2<Sequence,Sequence>> corrReadsDS;
 
 		// Correct and write reads
-		if (getConfig().KEEP_ORDER) {
-			getLogger().info("Range-Partitioner and sortPartition");
-
-			corrReadsDS = pairedReadsDS.partitionCustom(partitioner, 0)
-					.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER));
-
-		} else {
-			if (getCLIOptions().runMergerThread()) {
-				getLogger().info("Range-Partitioner");
-
-				corrReadsDS = pairedReadsDS.partitionCustom(partitioner, 0)
-						.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER));
-
-			} else {
-				corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER));
-			}
-		}
-
+		corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER));
 		corrReadsDS.map(read -> read.f0).writeUsingOutputFormat(tof1);
 		corrReadsDS.map(read -> read.f1).writeUsingOutputFormat(tof2);
+	}
+
+	private DataStream<Tuple2<LongWritable,Sequence>> getSingleDatastream() {
+		if (getConfig().KEEP_ORDER) {
+			getLogger().info("Range-Partitioner and sortPartition");
+			readsDS = readsDS.partitionCustom(partitioner, 0);
+		} else if (getCLIOptions().runMergerThread()) {
+			getLogger().info("Range-Partitioner");
+			readsDS = readsDS.partitionCustom(partitioner, 0);
+		}
+
+		return readsDS;
+	}
+
+	private DataStream<Tuple3<LongWritable,Sequence,Sequence>> getPairedDatastream() {
+		if (getConfig().KEEP_ORDER) {
+			getLogger().info("Range-Partitioner and sortPartition");
+			pairedReadsDS = pairedReadsDS.partitionCustom(partitioner, 0);
+		} else if (getCLIOptions().runMergerThread()) {
+			getLogger().info("Range-Partitioner");
+			pairedReadsDS = pairedReadsDS.partitionCustom(partitioner, 0);
+		}
+
+		return pairedReadsDS;
 	}
 }
