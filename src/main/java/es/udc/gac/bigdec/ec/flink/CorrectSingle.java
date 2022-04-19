@@ -19,15 +19,13 @@
 package es.udc.gac.bigdec.ec.flink;
 
 import org.apache.flink.api.common.functions.RichMapFunction;
-import org.apache.flink.api.java.functions.FunctionAnnotation.ReadFields;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.hadoop.io.LongWritable;
 
 import es.udc.gac.bigdec.ec.CorrectionAlgorithm;
 import es.udc.gac.bigdec.sequence.Sequence;
 
-@ReadFields("f1.*")
-public class CorrectSingle extends RichMapFunction<Tuple2<LongWritable,Sequence>,Sequence> {
+public class CorrectSingle extends RichMapFunction<Tuple2<LongWritable,Sequence>,Tuple2<LongWritable,Sequence>> {
 	private static final long serialVersionUID = -1991173889717482138L;
 
 	private CorrectionAlgorithm algorithm;
@@ -51,8 +49,8 @@ public class CorrectSingle extends RichMapFunction<Tuple2<LongWritable,Sequence>
 	}
 
 	@Override
-	public Sequence map(Tuple2<LongWritable,Sequence> sequence) throws Exception {
+	public Tuple2<LongWritable,Sequence> map(Tuple2<LongWritable,Sequence> sequence) throws Exception {
 		algorithm.correctRead(sequence.f1);
-		return sequence.f1;
+		return sequence;
 	}
 }
