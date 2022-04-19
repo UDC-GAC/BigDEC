@@ -274,19 +274,16 @@ public class FlinkDStream extends FlinkEC {
 		if (getConfig().KEEP_ORDER) {
 			getLogger().info("Range-Partitioner and sortPartition");
 
-			readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
-			.partitionCustom(partitioner, 0)
-			.map(read -> read.f1).writeUsingOutputFormat(tof);
+			readsDS.partitionCustom(partitioner, 0)
+			.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER)).writeUsingOutputFormat(tof);
 		} else {
 			if (getCLIOptions().runMergerThread()) {
 				getLogger().info("Range-Partitioner");
 
-				readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
-				.partitionCustom(partitioner, 0)
-				.map(read -> read.f1).writeUsingOutputFormat(tof);
+				readsDS.partitionCustom(partitioner, 0)
+				.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER)).writeUsingOutputFormat(tof);
 			} else {
-				readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
-				.map(read -> read.f1).writeUsingOutputFormat(tof);
+				readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER)).writeUsingOutputFormat(tof);
 			}
 		}
 	}
@@ -296,26 +293,28 @@ public class FlinkDStream extends FlinkEC {
 		org.apache.flink.core.fs.Path path2 = new org.apache.flink.core.fs.Path(algorithm.getOutputPath2().toString());
 		TextOuputFormat<Sequence> tof1 = new TextOuputFormat<Sequence>(path1, getHadoopConfig());
 		TextOuputFormat<Sequence> tof2 = new TextOuputFormat<Sequence>(path2, getHadoopConfig());
-		DataStream<Tuple3<LongWritable,Sequence,Sequence>> corrReadsDS;
+		DataStream<Tuple2<Sequence,Sequence>> corrReadsDS;
 
 		// Correct and write reads
 		if (getConfig().KEEP_ORDER) {
 			getLogger().info("Range-Partitioner and sortPartition");
 
-			corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
-					.partitionCustom(partitioner, 0);
+			corrReadsDS = pairedReadsDS.partitionCustom(partitioner, 0)
+					.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER));
+
 		} else {
 			if (getCLIOptions().runMergerThread()) {
 				getLogger().info("Range-Partitioner");
 
-				corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
-						.partitionCustom(partitioner, 0);
+				corrReadsDS = pairedReadsDS.partitionCustom(partitioner, 0)
+						.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER));
+
 			} else {
 				corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER));
 			}
 		}
 
-		corrReadsDS.map(read -> read.f1).writeUsingOutputFormat(tof1);
-		corrReadsDS.map(read -> read.f2).writeUsingOutputFormat(tof2);
+		corrReadsDS.map(read -> read.f0).writeUsingOutputFormat(tof1);
+		corrReadsDS.map(read -> read.f1).writeUsingOutputFormat(tof2);
 	}
 }

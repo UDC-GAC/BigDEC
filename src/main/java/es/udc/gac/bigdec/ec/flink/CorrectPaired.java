@@ -19,25 +19,30 @@
 package es.udc.gac.bigdec.ec.flink;
 
 import org.apache.flink.api.common.functions.RichMapFunction;
+import org.apache.flink.api.java.functions.FunctionAnnotation.ReadFields;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.hadoop.io.LongWritable;
 
 import es.udc.gac.bigdec.ec.CorrectionAlgorithm;
 import es.udc.gac.bigdec.sequence.Sequence;
 
-public class CorrectPaired extends RichMapFunction<Tuple3<LongWritable,Sequence,Sequence>,Tuple3<LongWritable,Sequence,Sequence>> {
+@ReadFields("f1.*;f2.*")
+public class CorrectPaired extends RichMapFunction<Tuple3<LongWritable,Sequence,Sequence>,Tuple2<Sequence,Sequence>> {
 	private static final long serialVersionUID = -4662420520884558538L;
 
 	private CorrectionAlgorithm algorithm;
 	private String kmersFile;
 	private boolean fromFile;
 	private short maxCounter;
+	private Tuple2<Sequence,Sequence> tuple2;
 
 	public CorrectPaired(CorrectionAlgorithm algorithm, boolean fromFile, String kmersFile, short maxCounter) {
 		this.algorithm = algorithm;
 		this.kmersFile = kmersFile;
 		this.fromFile = fromFile;
 		this.maxCounter = maxCounter;
+		this.tuple2 = new Tuple2<Sequence,Sequence>();
 	}
 
 	@Override
@@ -49,9 +54,10 @@ public class CorrectPaired extends RichMapFunction<Tuple3<LongWritable,Sequence,
 	}
 
 	@Override
-	public Tuple3<LongWritable,Sequence,Sequence> map(Tuple3<LongWritable,Sequence,Sequence> sequence) throws Exception {
+	public Tuple2<Sequence,Sequence> map(Tuple3<LongWritable,Sequence,Sequence> sequence) throws Exception {
 		algorithm.correctRead(sequence.f1);
 		algorithm.correctRead(sequence.f2);
-		return sequence;
+		tuple2.setFields(sequence.f1, sequence.f2);
+		return tuple2;
 	}
 }
