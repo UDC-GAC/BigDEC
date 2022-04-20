@@ -397,23 +397,26 @@ public class MergerThread extends Thread {
 	private long fullyCopyFile(Path inputFile, FSDataOutputStream out, long fileSize) throws IOException, InterruptedException {
 		FSDataInputStream in = srcFS.open(inputFile);
 		long totalBytes = 0;
-		int bytesRead = 0;
+		int bytesToRead = 0;
+		long availableBytes = 0;
 		int sleep = SLEEP_EOF;
 
 		logger.debug("Copying {} (incrSleep {})", inputFile, increaseSleep);
 
-		while (bytesRead >= 0) {
-			bytesRead = in.read(buffer, 0, buffer.length);
+		while (bytesToRead >= 0) {
+			bytesToRead = in.read(buffer, 0, buffer.length);
 
-			if (bytesRead > 0) {
-				out.write(buffer, 0, bytesRead);
-				totalBytes += bytesRead;
+			if (bytesToRead > 0) {
+				out.write(buffer, 0, bytesToRead);
+				totalBytes += bytesToRead;
 			}
 		}
 
 		// EOF
-		while (totalBytes <= fileSize) {
-			while (bytesRead <= 0) {
+		while (totalBytes < fileSize) {
+			bytesToRead = 0;
+
+			while (bytesToRead <= 0) {
 				in.close();
 				logger.debug("EOF (sleep {}, {})", sleep, inputFile);
 				Thread.sleep(sleep);
@@ -421,24 +424,31 @@ public class MergerThread extends Thread {
 				in = srcFS.open(inputFile);
 
 				try {
-					in.seek(totalBytes);
+					if (totalBytes > 0)
+						in.seek(totalBytes);
 				} catch (EOFException eof) {
 					sleep += increaseSleep;
 					continue;
 				}
 
-				bytesRead = in.available();
+				availableBytes = in.available();
+
+				if (availableBytes > 0) {
+					bytesToRead = (int) (availableBytes - totalBytes);
+					logger.debug("availableBytes {}, totalBytes {}, bytesToRead {} ({})", availableBytes, totalBytes, bytesToRead, inputFile);
+				}
 			}
 
 			sleep = SLEEP_EOF;
+			bytesToRead = in.read(buffer, 0, (bytesToRead > buffer.length)? buffer.length : bytesToRead);
 
-			while (bytesRead >= 0) {
-				bytesRead = in.read(buffer, 0, buffer.length);
-
-				if (bytesRead > 0) {
-					out.write(buffer, 0, bytesRead);
-					totalBytes += bytesRead;
+			while (bytesToRead >= 0) {
+				if (bytesToRead > 0) {
+					out.write(buffer, 0, bytesToRead);
+					totalBytes += bytesToRead;
 				}
+
+				bytesToRead = in.read(buffer, 0, buffer.length);
 			}
 		}
 
