@@ -79,6 +79,7 @@ public class HadoopFileInputFormat<K, V> extends FileInputFormat<Tuple2<K, V>> i
 
 	protected transient Credentials credentials;
 	protected transient RecordReader<K, V> recordReader;
+	private transient float avgRecordBytes;
 	protected boolean fetched = false;
 	protected boolean hasNext;
 
@@ -93,7 +94,12 @@ public class HadoopFileInputFormat<K, V> extends FileInputFormat<Tuple2<K, V>> i
 		this.keyClass = Preconditions.checkNotNull(key);
 		this.valueClass = Preconditions.checkNotNull(value);
 		this.configuration = job.getConfiguration();
+		this.avgRecordBytes = BaseStatistics.AVG_RECORD_BYTES_UNKNOWN;
 		HadoopUtils.mergeHadoopConf(configuration);
+	}
+
+	public void setAvgRecordBytes(float avgRecordBytes) {
+		this.avgRecordBytes = avgRecordBytes;
 	}
 
 	@Override
@@ -116,7 +122,14 @@ public class HadoopFileInputFormat<K, V> extends FileInputFormat<Tuple2<K, V>> i
 				? (FileBaseStatistics) cachedStats : null;
 
 		try {
-			final org.apache.hadoop.fs.Path[] paths = org.apache.hadoop.mapreduce.lib.input.FileInputFormat.getInputPaths(jobContext);
+			final org.apache.hadoop.fs.Path[] paths;
+
+			if (this.mapreduceFileInputFormat instanceof PairedEndSequenceInputFormat) {
+				paths = PairedEndSequenceInputFormat.getInputPaths(jobContext);
+			} else {
+				paths = org.apache.hadoop.mapreduce.lib.input.FileInputFormat.getInputPaths(jobContext);
+			}
+
 			return getFileStats(cachedFileStats, paths, new ArrayList<FileStatus>(1));
 		} catch (IOException ioex) {
 			if (logger.isWarnEnabled()) {
@@ -278,7 +291,6 @@ public class HadoopFileInputFormat<K, V> extends FileInputFormat<Tuple2<K, V>> i
 
 		// get the file info and check whether the cached statistics are still valid.
 		for (org.apache.hadoop.fs.Path hadoopPath : hadoopFilePaths) {
-
 			final Path filePath = new Path(hadoopPath.toUri());
 			final FileSystem fs = FileSystem.get(filePath.toUri());
 
@@ -312,12 +324,17 @@ public class HadoopFileInputFormat<K, V> extends FileInputFormat<Tuple2<K, V>> i
 			len += s.getLen();
 		}
 
+		if (this.mapreduceFileInputFormat instanceof PairedEndSequenceInputFormat)
+			len = files.get(0).getLen();
+
+		logger.info("Length {} bytes, Avg record bytes {}", len, avgRecordBytes);
+
 		// sanity check
 		if (len <= 0) {
 			len = BaseStatistics.SIZE_UNKNOWN;
 		}
 
-		return new FileBaseStatistics(latestModTime, len, BaseStatistics.AVG_RECORD_BYTES_UNKNOWN);
+		return new FileBaseStatistics(latestModTime, len, avgRecordBytes);
 	}
 
 	// --------------------------------------------------------------------------------------------
