@@ -398,7 +398,6 @@ public class MergerThread extends Thread {
 		FSDataInputStream in = srcFS.open(inputFile);
 		long totalBytes = 0;
 		int bytesToRead = 0;
-		long availableBytes = 0;
 		int sleep = SLEEP_EOF;
 
 		logger.debug("Copying {} (incrSleep {})", inputFile, increaseSleep);
@@ -414,8 +413,6 @@ public class MergerThread extends Thread {
 
 		// EOF
 		while (totalBytes < fileSize) {
-			bytesToRead = 0;
-
 			while (bytesToRead <= 0) {
 				in.close();
 				logger.debug("EOF (sleep {}, {})", sleep, inputFile);
@@ -431,24 +428,19 @@ public class MergerThread extends Thread {
 					continue;
 				}
 
-				availableBytes = in.available();
-
-				if (availableBytes > 0) {
-					bytesToRead = (int) (availableBytes - totalBytes);
-					logger.debug("availableBytes {}, totalBytes {}, bytesToRead {} ({})", availableBytes, totalBytes, bytesToRead, inputFile);
-				}
+				bytesToRead = in.available();
+				logger.debug("totalBytes {}, bytesToRead {} ({})",  totalBytes, bytesToRead, inputFile);
 			}
 
 			sleep = SLEEP_EOF;
+			logger.debug("bytesToRead {} ({})",  bytesToRead, inputFile);
 			bytesToRead = in.read(buffer, 0, (bytesToRead > buffer.length)? buffer.length : bytesToRead);
 
-			while (bytesToRead >= 0) {
-				if (bytesToRead > 0) {
-					out.write(buffer, 0, bytesToRead);
-					totalBytes += bytesToRead;
-				}
-
-				bytesToRead = in.read(buffer, 0, buffer.length);
+			while (bytesToRead > 0) {
+				out.write(buffer, 0, bytesToRead);
+				totalBytes += bytesToRead;
+				bytesToRead = in.available();
+				bytesToRead = in.read(buffer, 0, (bytesToRead > buffer.length)? buffer.length : bytesToRead);
 			}
 		}
 
