@@ -115,6 +115,7 @@ public class FlinkDS extends FlinkEC {
 			SingleEndSequenceInputFormat inputFormat = IOUtils.getInputFormatInstance(getInputFormatClass());
 			SingleEndSequenceInputFormat.setInputPaths(hadoopJob, getInputFile1());
 			HadoopFileInputFormat<LongWritable,Text> hadoopIF = new HadoopFileInputFormat<LongWritable,Text>(inputFormat, LongWritable.class, Text.class, hadoopJob);
+			hadoopIF.setAvgRecordBytes(getSequenceSize());
 
 			DataSet<Tuple2<LongWritable,Text>> inputDS = flinkExecEnv.createInput(hadoopIF);
 
@@ -124,6 +125,7 @@ public class FlinkDS extends FlinkEC {
 			PairedEndSequenceInputFormat.setLeftInputPath(getHadoopConfig(), getInputFile1(), getInputFormatClass());
 			PairedEndSequenceInputFormat.setRightInputPath(getHadoopConfig(), getInputFile2(), getInputFormatClass());
 			HadoopFileInputFormat<LongWritable,PairText> hadoopIF = new HadoopFileInputFormat<LongWritable,PairText>(new PairedEndSequenceInputFormat(), LongWritable.class, PairText.class, hadoopJob);
+			hadoopIF.setAvgRecordBytes(getSequenceSize());
 
 			DataSet<Tuple2<LongWritable,PairText>> inputDS = flinkExecEnv.createInput(hadoopIF);
 
