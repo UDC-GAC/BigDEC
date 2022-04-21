@@ -28,7 +28,7 @@ SPARK_API=Dataset
 # Only significant when SPARK_API=RDD
 SPARK_SERIALIZE_RDD=true
 
-# Whether to compress serialized partitions
+# Compress serialized partitions
 SPARK_COMPRESS_DATA=false
 
 # Codec used to compress broadcast variables, shuffle outputs and
@@ -54,6 +54,9 @@ FLINK_API=Dataset
 # user objects for potential better performance
 FLINK_OBJECT_REUSE=true
 
+# Execute multiple Flink jobs during error correction phase. Only relevant
+# when multiple correction algorithms are executed.
+FLINK_MULTIPLE_JOB=true
 ###################
 # HDFS
 ###################

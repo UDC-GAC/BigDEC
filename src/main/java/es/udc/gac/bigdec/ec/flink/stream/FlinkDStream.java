@@ -235,7 +235,20 @@ public class FlinkDStream extends FlinkEC {
 
 	@Override
 	protected void runErrorCorrection(CorrectionAlgorithm algorithm) {
-		throw new RuntimeException("Not implemented");
+		if (!isPaired()) {
+			putMergePath(algorithm.getOutputPath1());
+			correctSingleDataset(algorithm, getSolidKmersFile());
+		} else {
+			putMergePath(algorithm.getOutputPath1());
+			putMergePath(algorithm.getOutputPath2());
+			correctPairedDataset(algorithm, getSolidKmersFile());
+		}
+
+		try {
+			flinkExecEnv.execute();
+		} catch (Exception e) {
+			IOUtils.error(e.getMessage());
+		}
 	}
 
 	@Override

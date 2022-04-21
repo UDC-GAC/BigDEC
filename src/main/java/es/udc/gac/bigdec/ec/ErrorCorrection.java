@@ -60,6 +60,7 @@ public abstract class ErrorCorrection {
 	private static final String ANALYZE_HISTOGRAMS_TIME = "ANALYZE_HISTOGRAMS_TIME";
 	private static final String FILTER_SOLID_KMERS_TIME = "FILTER_SOLID_KMERS_TIME";
 	private static final String SAVE_SOLID_KMERS_TIME = "SAVE_SOLID_KMERS_TIME";
+	private static final String MERGE_SOLID_KMERS_TIME = "MRGE_SOLID_KMERS_TIME";
 	private static final String LOAD_SOLID_KMERS_TIME = "LOAD_SOLID_KMERS_TIME";
 	private static final String ERROR_CORRECTION_TIME = "ERROR_CORRECTION_TIME";
 	private static final String DESTROY_DATASETS_TIME = "DESTROY_DATASETS_TIME";
@@ -89,6 +90,7 @@ public abstract class ErrorCorrection {
 	private Path solidKmersPath;
 	private Path solidKmersFile;
 	private long nsplits;
+	private long blockSize;
 	private int sequenceSize;
 
 	public ErrorCorrection(Configuration config, CLIOptions options) {
@@ -281,6 +283,7 @@ public abstract class ErrorCorrection {
 		solidKmersFile = new Path(options.getOutputDir()+Configuration.SLASH+"kmers.solid");
 
 		FileSystem fs = FileSystem.get(hadoopConfig);
+		blockSize = fs.getFileStatus(inputFile1).getBlockSize();
 
 		if (fs.exists(solidKmersPath))
 			fs.delete(solidKmersPath, true);
@@ -511,6 +514,8 @@ public abstract class ErrorCorrection {
 
 		// Merge k-mer files
 		try {
+			timer.start(MERGE_SOLID_KMERS_TIME);
+
 			FileSystem fs = FileSystem.get(hadoopConfig);
 
 			if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE && getParallelism() == 1) {
@@ -519,13 +524,15 @@ public abstract class ErrorCorrection {
 				List<Path> inputFiles = RunMerge.getFiles(fs, getSolidKmersPath(), false);
 				RunMerge.merge(fs, getSolidKmersPath(), inputFiles, fs, getSolidKmersFile(), 3, true, getHadoopConfig());
 			}
+
+			timer.stop(MERGE_SOLID_KMERS_TIME);
 		} catch (IOException e) {
 			IOUtils.error(e.getMessage());
 		}
 		timer.stop(SAVE_SOLID_KMERS_TIME);
 
 		/*
-		 * Create and start merger threads
+		 * Start merger threads
 		 */
 		if (options.runMergerThread())
 			mergerThreads = runMergerThreads(outputPaths);
@@ -534,9 +541,21 @@ public abstract class ErrorCorrection {
 		 * Correct errors in reads
 		 */
 		if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE) {
-			timer.start(ERROR_CORRECTION_TIME);
-			runErrorCorrection(correctionAlgorithms);
-			timer.stop(ERROR_CORRECTION_TIME);
+			if (!config.FLINK_MULTIPLE_JOB) {
+				timer.start(ERROR_CORRECTION_TIME);
+				runErrorCorrection(correctionAlgorithms);
+				timer.stop(ERROR_CORRECTION_TIME);
+			} else {
+				for (CorrectionAlgorithm algorithm: correctionAlgorithms) {
+					IOUtils.info("executing algorithm "+algorithm.toString());
+					algorithm.printConfig();
+					timer.start(ERROR_CORRECTION_TIME);
+					timer.start(algorithm.getClass().getName());
+					runErrorCorrection(algorithm);
+					timer.stop(algorithm.getClass().getName());
+					timer.stop(ERROR_CORRECTION_TIME);
+				}
+			}
 		} else {
 			/*
 			 * Load solid k-mers to make them available on workers
@@ -580,7 +599,7 @@ public abstract class ErrorCorrection {
 						thread.join();
 					} catch (InterruptedException e) {
 						thread.terminate();
-						IOUtils.error("InterruptedException while waiting for merger thread: "+e.getMessage());
+						IOUtils.error("InterruptedException waiting for merger thread: "+e.getMessage());
 					}
 					timer.stop(MERGER_THREAD_TIME);
 				}
@@ -620,6 +639,8 @@ public abstract class ErrorCorrection {
 		IOUtils.info(" -analyze histograms = " +IOUtils.formatTwoDecimal(timer.getTotalTime(ANALYZE_HISTOGRAMS_TIME))+" seconds");
 		if (timer.getTotalTime(SAVE_SOLID_KMERS_TIME) != 0)
 			IOUtils.info(" -save solid k-mers = " +IOUtils.formatTwoDecimal(timer.getTotalTime(SAVE_SOLID_KMERS_TIME))+" seconds");
+		if (timer.getTotalTime(MERGE_SOLID_KMERS_TIME) != 0)
+			IOUtils.info(" -merge solid k-mers = " +IOUtils.formatTwoDecimal(timer.getTotalTime(MERGE_SOLID_KMERS_TIME))+" seconds");		
 		if (timer.getTotalTime(LOAD_SOLID_KMERS_TIME) != 0)
 			IOUtils.info(" -load solid k-mers = " +IOUtils.formatTwoDecimal(timer.getTotalTime(LOAD_SOLID_KMERS_TIME))+" seconds");
 		if (timer.getTotalTime(FILTER_SOLID_KMERS_TIME) != 0)
@@ -674,7 +695,7 @@ public abstract class ErrorCorrection {
 
 		if (!config.MULTITHREAD_MERGE) {
 			MergerThread mergerThread = new MergerThread(srcFS, dstFS, outputPaths, null,
-					outputFile1, outputFile2, outputFiles, done, true, fileSize, config, hadoopConfig);
+					outputFile1, outputFile2, outputFiles, done, true, fileSize, blockSize, config, hadoopConfig);
 
 			mergerThreads.put("ALL", mergerThread);
 		} else {
@@ -684,26 +705,26 @@ public abstract class ErrorCorrection {
 			for (CorrectionAlgorithm algorithm: correctionAlgorithms) {
 				paths = new ArrayList<Path>();
 				paths.add(new Path(algorithm.getOutputPath1().toString()));
-				BlockingQueue<Path> queue = null;
+				BlockingQueue<Path> queue = new ArrayBlockingQueue<Path>(1);
 
-				if (RunEC.EXECUTION_ENGINE == ExecutionEngine.SPARK_MODE)
-					queue = new ArrayBlockingQueue<Path>(1);
+				if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE && !config.FLINK_MULTIPLE_JOB)
+					queue = null;
 
 				mergerThread = new MergerThread(srcFS, dstFS, paths, queue,
-						outputFile1, outputFile2, outputFiles, done, true, fileSize, config, hadoopConfig);
+						outputFile1, outputFile2, outputFiles, done, true, fileSize, blockSize, config, hadoopConfig);
 
 				mergerThreads.put(algorithm.getOutputPath1().toString(), mergerThread);
 
 				if (isPaired()) {
 					paths = new ArrayList<Path>();
 					paths.add(new Path(algorithm.getOutputPath2().toString()));
-					BlockingQueue<Path> pairedQueue = null;
+					BlockingQueue<Path> pairedQueue = new ArrayBlockingQueue<Path>(1);
 
-					if (RunEC.EXECUTION_ENGINE == ExecutionEngine.SPARK_MODE)
-						pairedQueue = new ArrayBlockingQueue<Path>(1);
+					if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE && !config.FLINK_MULTIPLE_JOB)
+						pairedQueue = null;
 
 					mergerThread = new MergerThread(srcFS, dstFS, paths, pairedQueue,
-							outputFile1, outputFile2, outputFiles, done, true, fileSize, config, hadoopConfig);
+							outputFile1, outputFile2, outputFiles, done, true, fileSize, blockSize, config, hadoopConfig);
 
 					mergerThreads.put(algorithm.getOutputPath2().toString(), mergerThread);
 				}

@@ -28,13 +28,13 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +71,7 @@ public class MergerThread extends Thread {
 
 	public MergerThread(FileSystem srcFS, FileSystem dstFS, List<Path> inputPaths, BlockingQueue<Path> inputPathsQueue,
 			Path outputFile1, Path outputFile2, long outputFiles, Path done, boolean asynchronous, long fileSize,
-			Configuration config, org.apache.hadoop.conf.Configuration hadoopConfig) {
+			long blockSize, Configuration config, org.apache.hadoop.conf.Configuration hadoopConfig) {
 		this.config = config;
 		this.srcFS = srcFS;
 		this.dstFS = dstFS;
@@ -80,9 +80,9 @@ public class MergerThread extends Thread {
 		this.inputPaths = inputPaths;
 		this.inputPathsQueue = inputPathsQueue;
 		this.outputFiles = outputFiles;
-		int bufferSize = hadoopConfig.getInt(DFSConfigKeys.IO_FILE_BUFFER_SIZE_KEY, DFSConfigKeys.IO_FILE_BUFFER_SIZE_DEFAULT);
+		int bufferSize = hadoopConfig.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT);
 		this.buffer = new byte[bufferSize];
-		this.blockSize = hadoopConfig.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT);
+		this.blockSize = blockSize;
 		this.fileSize = fileSize;
 		this.running = new AtomicBoolean(false);
 		this.done = done;
@@ -106,6 +106,8 @@ public class MergerThread extends Thread {
 	@Override
 	public void run() {
 		running.set(true);
+
+		logger.info("bufferSize {}, blockSize {}", buffer.length, blockSize);
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Paths to merge");
@@ -163,7 +165,7 @@ public class MergerThread extends Thread {
 			throw new IOException("Input blocking queue is null");
 
 		while (true) {
-			logger.info("Waiting to receive work from main thread");
+			logger.info("Waiting to receive signal from main thread");
 			// Wait until notified from main thread
 			inputPath = inputPathsQueue.take();
 
@@ -433,8 +435,9 @@ public class MergerThread extends Thread {
 			}
 
 			sleep = SLEEP_EOF;
+			bytesToRead = (bytesToRead > buffer.length)? buffer.length : bytesToRead;
 			logger.debug("bytesToRead {} ({})",  bytesToRead, inputFile);
-			bytesToRead = in.read(buffer, 0, (bytesToRead > buffer.length)? buffer.length : bytesToRead);
+			bytesToRead = in.read(buffer, 0, bytesToRead);
 
 			while (bytesToRead > 0) {
 				out.write(buffer, 0, bytesToRead);

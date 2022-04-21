@@ -120,6 +120,7 @@ public final class Configuration {
 	public Integer SPARK_SHUFFLE_PARTITIONS = 1;
 	public String FLINK_API = "Dataset";
 	public Boolean FLINK_OBJECT_REUSE = true;
+	public Boolean FLINK_MULTIPLE_JOB = true;
 	public Boolean HDFS_DELETE_TEMP_FILES = true;
 	public Integer HDFS_BLOCK_REPLICATION = 1;
 
