@@ -55,7 +55,7 @@ FLINK_API=Dataset
 FLINK_OBJECT_REUSE=true
 
 # Execute multiple Flink jobs during error correction phase. Only relevant
-# when multiple correction algorithms are executed.
+# when multiple correction algorithms are executed
 FLINK_MULTIPLE_JOB=true
 
 ###################
