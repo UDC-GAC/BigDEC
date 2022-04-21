@@ -676,7 +676,7 @@ public abstract class ErrorCorrection {
 
 		// Merge files
 		RunMerge.merge(srcFS, outputPath, inputFiles, dstFS, outputFile,
-				config.HDFS_BLOCK_REPLICATION, config.HDFS_DELETE_TEMP_FILES, hadoopConfig);
+				config.HDFS_BLOCK_REPLICATION, blockSize, config.HDFS_DELETE_TEMP_FILES, hadoopConfig);
 	}
 
 	private Map<String,MergerThread> runMergerThreads(List<Path> outputPaths) throws IOException {

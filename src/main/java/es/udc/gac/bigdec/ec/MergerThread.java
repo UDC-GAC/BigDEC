@@ -80,7 +80,7 @@ public class MergerThread extends Thread {
 		this.inputPaths = inputPaths;
 		this.inputPathsQueue = inputPathsQueue;
 		this.outputFiles = outputFiles;
-		int bufferSize = hadoopConfig.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT);
+		int bufferSize = hadoopConfig.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, RunMerge.BUFFER_SIZE_DEFAULT);
 		this.buffer = new byte[bufferSize];
 		this.blockSize = blockSize;
 		this.fileSize = fileSize;
@@ -107,7 +107,7 @@ public class MergerThread extends Thread {
 	public void run() {
 		running.set(true);
 
-		logger.info("bufferSize {}, blockSize {}", buffer.length, blockSize);
+		logger.info("bufferSize {}, blockSize {}, replication factor {}", buffer.length, blockSize, config.HDFS_BLOCK_REPLICATION.shortValue());
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Paths to merge");

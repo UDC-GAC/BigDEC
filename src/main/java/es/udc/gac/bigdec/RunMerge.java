@@ -26,12 +26,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
@@ -42,8 +42,8 @@ import es.udc.gac.bigdec.util.Timer;
 
 public class RunMerge extends Configured implements Tool {
 
-	private static final long BLOCK_SIZE_DEFAULT = 128 * 1024 * 1024;
-	private static final int BUFFER_SIZE_DEFAULT = 64 * 1024;
+	public static final long BLOCK_SIZE_DEFAULT = 128 * 1024 * 1024;
+	public static final int BUFFER_SIZE_DEFAULT = 128 * 1024;
 
 	private static final Logger logger = LoggerFactory.getLogger(RunMerge.class);
 	private static final Timer timer = new Timer();
@@ -136,8 +136,8 @@ public class RunMerge extends Configured implements Tool {
 	public static void merge(FileSystem srcFS, Path srcDir, List<Path> inputFiles, FileSystem dstFS, Path dstFile, int replication,
 			boolean deleteSource, org.apache.hadoop.conf.Configuration conf) throws IOException {
 
-		long blockSize = conf.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE_DEFAULT);
-		int bufferSize = conf.getInt(DFSConfigKeys.IO_FILE_BUFFER_SIZE_KEY, BUFFER_SIZE_DEFAULT);
+		long blockSize = conf.getLong("dfs.blocksize", BLOCK_SIZE_DEFAULT);
+		int bufferSize = conf.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, BUFFER_SIZE_DEFAULT);
 		RunMerge.merge(srcFS, inputFiles, dstFS, dstFile, bufferSize, replication, blockSize, conf);
 
 		if (deleteSource)
@@ -147,8 +147,7 @@ public class RunMerge extends Configured implements Tool {
 	public static void merge(FileSystem srcFS, Path srcDir, List<Path> inputFiles, FileSystem dstFS, Path dstFile, int replication,
 			long blockSize, boolean deleteSource, org.apache.hadoop.conf.Configuration conf) throws IOException {
 
-		int bufferSize = conf.getInt(DFSConfigKeys.IO_FILE_BUFFER_SIZE_KEY, BUFFER_SIZE_DEFAULT);
-
+		int bufferSize = conf.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, BUFFER_SIZE_DEFAULT);
 		RunMerge.merge(srcFS, inputFiles, dstFS, dstFile, bufferSize, replication, blockSize, conf);
 
 		if (deleteSource)
@@ -169,22 +168,22 @@ public class RunMerge extends Configured implements Tool {
 	public static void merge(FileSystem srcFS, Path srcDir, FileSystem dstFS, Path dstFile, int bufferSize, int replication, 
 			boolean deleteSource, org.apache.hadoop.conf.Configuration conf) throws IOException {
 
-		long blockSize = conf.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE_DEFAULT);
+		long blockSize = conf.getLong("dfs.blocksize", BLOCK_SIZE_DEFAULT);
 		RunMerge.merge(srcFS, srcDir, dstFS, dstFile, bufferSize, replication, blockSize, deleteSource, conf);
 	}
 
-	public static void merge(FileSystem srcFS, Path srcDir, FileSystem dstFS, Path dstFile, long blockSize, int replication, 
+	public static void merge(FileSystem srcFS, Path srcDir, FileSystem dstFS, Path dstFile, int replication, long blockSize, 
 			boolean deleteSource, org.apache.hadoop.conf.Configuration conf) throws IOException {
 
-		int bufferSize = conf.getInt(DFSConfigKeys.IO_FILE_BUFFER_SIZE_KEY, BUFFER_SIZE_DEFAULT);
+		int bufferSize = conf.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, BUFFER_SIZE_DEFAULT);
 		RunMerge.merge(srcFS, srcDir, dstFS, dstFile, bufferSize, replication, blockSize, deleteSource, conf);
 	}
 
 	public static void merge(FileSystem srcFS, Path srcDir, FileSystem dstFS, Path dstFile, int replication, 
 			boolean deleteSource, org.apache.hadoop.conf.Configuration conf) throws IOException {
 
-		long blockSize = conf.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE_DEFAULT);
-		int bufferSize = conf.getInt(DFSConfigKeys.IO_FILE_BUFFER_SIZE_KEY, BUFFER_SIZE_DEFAULT);
+		long blockSize = conf.getLong("dfs.blocksize", BLOCK_SIZE_DEFAULT);
+		int bufferSize = conf.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, BUFFER_SIZE_DEFAULT);
 		RunMerge.merge(srcFS, srcDir, dstFS, dstFile, bufferSize, replication, blockSize, deleteSource, conf);
 	}
 
@@ -208,8 +207,8 @@ public class RunMerge extends Configured implements Tool {
 
 		IOUtils.info("input source path = "+inputPath);
 
-		long blockSize = conf.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE_DEFAULT);
-		int bufferSize = conf.getInt(DFSConfigKeys.IO_FILE_BUFFER_SIZE_KEY, BUFFER_SIZE_DEFAULT);
+		long blockSize = conf.getLong("dfs.blocksize", BLOCK_SIZE_DEFAULT);
+		int bufferSize = conf.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, BUFFER_SIZE_DEFAULT);
 
 		timer.start(TOTAL_TIME);
 		RunMerge.merge(srcFS, inputPath, dstFS, outputPath, bufferSize, replication, blockSize, deleteSrc, conf);
