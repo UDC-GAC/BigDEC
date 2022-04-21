@@ -240,33 +240,17 @@ public class FlinkDStream extends FlinkEC {
 
 	@Override
 	protected void runErrorCorrection(List<CorrectionAlgorithm> correctionAlgorithms) {
-		if (correctionAlgorithms.size() == 1) {
-			getLogger().info("Single-algorithm execution");
+		/*
+		 *  For each correction algorithm
+		 */
+		for (CorrectionAlgorithm algorithm: correctionAlgorithms) {
+			IOUtils.info("executing algorithm "+algorithm.toString());
+			algorithm.printConfig();
 
 			if (!isPaired())
-				correctSingleDataset(correctionAlgorithms.get(0), getSolidKmersFile());
+				correctSingleDataset(algorithm, getSolidKmersFile());
 			else
-				correctPairedDataset(correctionAlgorithms.get(0), getSolidKmersFile());
-		} else {
-			getLogger().info("Multi-algorithm execution");
-
-			if (!isPaired())
-				readsDS = getPartitionedSingleDatastream();
-			else
-				pairedReadsDS = getPartitionedPairedDatastream();
-
-			/*
-			 *  For each correction algorithm
-			 */
-			for (CorrectionAlgorithm algorithm: correctionAlgorithms) {
-				IOUtils.info("executing algorithm "+algorithm.toString());
-				algorithm.printConfig();
-
-				if (!isPaired())
-					correctAndWriteSingleDataset(algorithm, getSolidKmersFile());
-				else
-					correctAndWritePairedDataset(algorithm, getSolidKmersFile());
-			}
+				correctPairedDataset(algorithm, getSolidKmersFile());
 		}
 
 		try {
@@ -280,15 +264,6 @@ public class FlinkDStream extends FlinkEC {
 	protected void destroyDatasets() {
 		readsDS = null;
 		pairedReadsDS = null;
-	}
-
-	private void correctAndWriteSingleDataset(CorrectionAlgorithm algorithm, Path kmersFile) {
-		org.apache.flink.core.fs.Path path = new org.apache.flink.core.fs.Path(algorithm.getOutputPath1().toString());
-		TextOuputFormat<Sequence> tof = new TextOuputFormat<Sequence>(path, getHadoopConfig());
-
-		// Correct and write reads
-		readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
-		.map(read -> read.f1).writeUsingOutputFormat(tof);
 	}
 
 	private void correctSingleDataset(CorrectionAlgorithm algorithm, Path kmersFile) {
@@ -306,19 +281,6 @@ public class FlinkDStream extends FlinkEC {
 			readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
 			.map(read -> read.f1).writeUsingOutputFormat(tof);
 		}
-	}
-
-	private void correctAndWritePairedDataset(CorrectionAlgorithm algorithm, Path kmersFile) {
-		org.apache.flink.core.fs.Path path1 = new org.apache.flink.core.fs.Path(algorithm.getOutputPath1().toString());
-		org.apache.flink.core.fs.Path path2 = new org.apache.flink.core.fs.Path(algorithm.getOutputPath2().toString());
-		TextOuputFormat<Sequence> tof1 = new TextOuputFormat<Sequence>(path1, getHadoopConfig());
-		TextOuputFormat<Sequence> tof2 = new TextOuputFormat<Sequence>(path2, getHadoopConfig());
-		DataStream<Tuple3<LongWritable,Sequence,Sequence>> corrReadsDS;
-
-		// Correct and write reads
-		corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER));
-		corrReadsDS.map(read -> read.f1).writeUsingOutputFormat(tof1);
-		corrReadsDS.map(read -> read.f2).writeUsingOutputFormat(tof2);
 	}
 
 	private void correctPairedDataset(CorrectionAlgorithm algorithm, Path kmersFile) {
@@ -340,23 +302,5 @@ public class FlinkDStream extends FlinkEC {
 
 		corrReadsDS.map(read -> read.f1).writeUsingOutputFormat(tof1);
 		corrReadsDS.map(read -> read.f2).writeUsingOutputFormat(tof2);
-	}
-
-	private DataStream<Tuple2<LongWritable,Sequence>> getPartitionedSingleDatastream() {
-		if (getCLIOptions().runMergerThread()) {
-			getLogger().info("Range-Partitioner");
-			readsDS = readsDS.partitionCustom(partitioner, 0);
-		}
-
-		return readsDS;
-	}
-
-	private DataStream<Tuple3<LongWritable,Sequence,Sequence>> getPartitionedPairedDatastream() {
-		if (getCLIOptions().runMergerThread()) {
-			getLogger().info("Range-Partitioner");
-			pairedReadsDS = pairedReadsDS.partitionCustom(partitioner, 0);
-		}
-
-		return pairedReadsDS;
 	}
 }
