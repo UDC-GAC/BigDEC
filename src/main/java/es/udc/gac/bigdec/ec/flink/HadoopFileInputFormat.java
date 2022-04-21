@@ -327,7 +327,7 @@ public class HadoopFileInputFormat<K, V> extends FileInputFormat<Tuple2<K, V>> i
 		if (this.mapreduceFileInputFormat instanceof PairedEndSequenceInputFormat)
 			len = files.get(0).getLen();
 
-		logger.info("Length {} bytes, Avg record bytes {}", len, avgRecordBytes);
+		logger.debug("Length {} bytes, Avg record bytes {}", len, avgRecordBytes);
 
 		// sanity check
 		if (len <= 0) {
