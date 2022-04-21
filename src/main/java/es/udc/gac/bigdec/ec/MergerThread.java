@@ -442,8 +442,7 @@ public class MergerThread extends Thread {
 			while (bytesToRead > 0) {
 				out.write(buffer, 0, bytesToRead);
 				totalBytes += bytesToRead;
-				bytesToRead = in.available();
-				bytesToRead = in.read(buffer, 0, (bytesToRead > buffer.length)? buffer.length : bytesToRead);
+				bytesToRead = in.read(buffer, 0, buffer.length);
 			}
 		}
 
