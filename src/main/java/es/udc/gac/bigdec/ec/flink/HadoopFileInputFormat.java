@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class HadoopFileInputFormat<K, V> extends FileInputFormat<Tuple2<K, V>> implements ResultTypeQueryable<Tuple2<K, V>> {
@@ -172,12 +173,25 @@ public class HadoopFileInputFormat<K, V> extends FileInputFormat<Tuple2<K, V>> i
 
 			if (hadoopSplits.get(i) instanceof PairedEndInputSplit) {
 				length = ((PairedEndInputSplit) hadoopSplits.get(i)).getLength(0);
+
+				if (logger.isDebugEnabled()) {
+					try {
+						logger.debug("locations left: {}", Arrays.toString(((PairedEndInputSplit) hadoopSplits.get(i)).getLocation(0)));
+						logger.debug("locations right: {}", Arrays.toString(((PairedEndInputSplit) hadoopSplits.get(i)).getLocation(1)));
+					} catch (InterruptedException e) {
+						throw new IOException(e.getMessage());
+					}
+				}
 			}
 
 			splits[i] = new FileInputSplit(i, new Path(fileSplit.getPath().toString()), 
 					fileSplit.getStart(), length, fileSplit.getLocations());
 
-			logger.info("split {}: {} ({})", i, fileSplit, fileSplit.getLocations());
+			if (fileSplit.getLocations().length == 0)
+				logger.warn("empty locations for split {}: {} ({})", i, fileSplit);
+
+			if (logger.isDebugEnabled())
+				logger.debug("split {}: {} ({})", i, fileSplit, Arrays.toString(fileSplit.getLocations()));
 		}
 
 		return splits;
