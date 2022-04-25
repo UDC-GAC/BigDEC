@@ -121,6 +121,8 @@ public final class Configuration {
 	public String FLINK_API = "Dataset";
 	public Boolean FLINK_OBJECT_REUSE = true;
 	public Boolean FLINK_MULTIPLE_JOB = true;
+	public Boolean FLINK_PRE_SHUFFLE_AGGREGATOR = true;
+	public Integer FLINK_PRE_SHUFFLE_AGGREGATOR_LIMIT = 65536;
 	public Boolean HDFS_DELETE_TEMP_FILES = true;
 	public Integer HDFS_BLOCK_REPLICATION = 1;
 
@@ -346,6 +348,9 @@ public final class Configuration {
 		if (SPARK_SHUFFLE_PARTITIONS <= 0) {
 			throw new RuntimeException("SPARK_SHUFFLE_PARTITIONS="+SPARK_SHUFFLE_PARTITIONS+" must be >= 1");
 		}
+
+		if (FLINK_PRE_SHUFFLE_AGGREGATOR_LIMIT <= 0)
+			throw new RuntimeException("FLINK_PRE_SHUFFLE_AGGREGATOR_LIMIT="+FLINK_PRE_SHUFFLE_AGGREGATOR_LIMIT+" must be >= 1");
 
 		if (!FLINK_API.equalsIgnoreCase("Dataset") && !FLINK_API.equalsIgnoreCase("Datastream"))
 			throw new RuntimeException("FLINK_API="+FLINK_API+" is invalid. Supported values: Dataset and Datastream");

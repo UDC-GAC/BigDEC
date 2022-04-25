@@ -27,11 +27,14 @@ import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-
+import org.apache.flink.streaming.api.operators.OneInputStreamOperator;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -116,6 +119,7 @@ public class FlinkDStream extends FlinkEC {
 			SingleEndSequenceInputFormat inputFormat = IOUtils.getInputFormatInstance(getInputFormatClass());
 			SingleEndSequenceInputFormat.setInputPaths(hadoopJob, getInputFile1());
 			HadoopFileInputFormat<LongWritable,Text> hadoopIF = new HadoopFileInputFormat<LongWritable,Text>(inputFormat, LongWritable.class, Text.class, hadoopJob);
+			hadoopIF.setAvgRecordBytes(getSequenceSize());
 			hadoopIF.setFilePath(getInputFile1().toString());
 
 			DataStream<Tuple2<LongWritable,Text>> inputDS = flinkExecEnv.createInput(hadoopIF);
@@ -126,6 +130,7 @@ public class FlinkDStream extends FlinkEC {
 			PairedEndSequenceInputFormat.setLeftInputPath(getHadoopConfig(), getInputFile1(), getInputFormatClass());
 			PairedEndSequenceInputFormat.setRightInputPath(getHadoopConfig(), getInputFile2(), getInputFormatClass());
 			HadoopFileInputFormat<LongWritable,PairText> hadoopIF = new HadoopFileInputFormat<LongWritable,PairText>(new PairedEndSequenceInputFormat(), LongWritable.class, PairText.class, hadoopJob);
+			hadoopIF.setAvgRecordBytes(getSequenceSize());
 			hadoopIF.setFilePath(getInputFile1().toString());
 
 			DataStream<Tuple2<LongWritable,PairText>> inputDS = flinkExecEnv.createInput(hadoopIF);
@@ -152,6 +157,9 @@ public class FlinkDStream extends FlinkEC {
 			kmersDS = pairedReadsDS.flatMap(new KmerGenPaired(getKmerLength(), isIgnoreNBases()));
 		}
 
+		if (getConfig().FLINK_PRE_SHUFFLE_AGGREGATOR)
+			kmersDS = kmersDS.transform("preAggregator", TypeInformation.of(new TypeHint<Tuple2<Kmer, Integer>>(){}), getCombinerOperator());
+
 		kmersDS = kmersDS.keyBy(kmer -> kmer.f0).sum(1).filter(new FilterFunction<Tuple2<Kmer,Integer>>() {
 			private static final long serialVersionUID = 2720097123780600026L;
 
@@ -160,6 +168,13 @@ public class FlinkDStream extends FlinkEC {
 				return kmer.f1 >= minKmerCounter;
 			}
 		});
+	}
+
+	private OneInputStreamOperator<Tuple2<Kmer, Integer>, Tuple2<Kmer, Integer>> getCombinerOperator() {
+		MapBundleFunction<Kmer, Integer, Tuple2<Kmer, Integer>, Tuple2<Kmer, Integer>> myMapBundleFunction = new MapBundleKmer();
+		KeySelector<Tuple2<Kmer, Integer>, Kmer> keyBundleSelector = (KeySelector<Tuple2<Kmer, Integer>, Kmer>) value -> value.f0;
+		CountBundleTrigger<Tuple2<Kmer, Integer>> bundleTrigger = new CountBundleTrigger<Tuple2<Kmer, Integer>>(getConfig().FLINK_PRE_SHUFFLE_AGGREGATOR_LIMIT);
+		return new MapStreamBundleOperator<Kmer, Integer, Tuple2<Kmer, Integer>,Tuple2<Kmer, Integer>>(myMapBundleFunction, bundleTrigger, keyBundleSelector);
 	}
 
 	@Override
