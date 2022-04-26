@@ -22,14 +22,14 @@ import java.io.Serializable;
 
 import org.apache.flink.util.Preconditions;
 
-public class CountBundleTrigger<T> implements Serializable {
+public class CountTrigger<T> implements Serializable {
 	private static final long serialVersionUID = -4343892739180507503L;
 
 	private final long maxCount;
 	private transient BundleTriggerCallback callback;
 	private transient long count = 0;
 
-	public CountBundleTrigger(long maxCount) {
+	public CountTrigger(long maxCount) {
 		Preconditions.checkArgument(maxCount > 0, "maxCount must be greater than 0");
 		this.maxCount = maxCount;
 	}

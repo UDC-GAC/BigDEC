@@ -46,7 +46,7 @@ public class KmerHistogram extends RichMapFunction<Tuple2<Kmer,Integer>,Tuple2<K
 	}
 
 	@Override
-	public Tuple2<Kmer,Integer> map(Tuple2<Kmer, Integer> kmer) throws Exception {
+	public Tuple2<Kmer,Integer> map(Tuple2<Kmer,Integer> kmer) throws Exception {
 		this.histogram.add((kmer.f1 >= maxCounter)? maxCounter : kmer.f1);
 		return kmer;
 	}

@@ -25,7 +25,6 @@ import java.util.TreeMap;
 
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.FilterFunction;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
@@ -167,7 +166,12 @@ public class FlinkDS extends FlinkEC {
 		TreeMap<Integer, Integer> treeMap = null;
 		int[] kmerHistogram = new int[ErrorCorrection.KMER_HISTOGRAM_SIZE];
 
-		kmersDS.map(new KmerHistogram(ErrorCorrection.KMER_HISTOGRAM_SIZE, FlinkEC.kmerHistogram)).output(new DiscardingOutputFormat<>());
+		kmersDS = kmersDS.map(new KmerHistogram(ErrorCorrection.KMER_HISTOGRAM_SIZE, FlinkEC.kmerHistogram));
+
+		if (!getConfig().FLINK_WRITE_KMERS)
+			kmersDS.output(new DiscardingOutputFormat<>());
+		else
+			kmersDS.writeAsCsv(getKmersPath().toString());
 
 		try {
 			result = flinkExecEnv.execute();
@@ -196,19 +200,25 @@ public class FlinkDS extends FlinkEC {
 
 	@Override
 	protected void writeSolidKmersAsCSV(short kmerThreshold, short maxKmerCounter) {
-		kmerCounting(kmerThreshold, maxKmerCounter);
+		DataSet<Tuple2<Long,Integer>> kmers;
 
-		kmersDS.map(new MapFunction<Tuple2<Kmer,Integer>, String>() {
-			private static final long serialVersionUID = -8083760782993252080L;
+		if (!getConfig().FLINK_WRITE_KMERS) {
+			kmerCounting(kmerThreshold, maxKmerCounter);
+			kmersDS.writeAsCsv(getSolidKmersPath().toString());
+		} else {
+			kmers = flinkExecEnv.readCsvFile(getKmersPath().toString())
+					.types(Long.class, Integer.class)
+					.filter(new FilterFunction<Tuple2<Long,Integer>>() {
+						private static final long serialVersionUID = -4321647988640959250L;
 
-			@Override
-			public String map(Tuple2<Kmer, Integer> kmer) throws Exception {
-				if (kmer.f1 >= KMER_MAX_COUNTER)
-					return kmer.f0.toString()+","+KMER_MAX_COUNTER;
+						@Override
+						public boolean filter(Tuple2<Long,Integer> kmer) {
+							return kmer.f1 >= kmerThreshold;
+						}
+					}).withForwardedFields("f0;f1");
 
-				return kmer.f0.toString()+","+kmer.f1.toString();
-			}
-		}).writeAsText(getSolidKmersPath().toString());
+			kmers.writeAsCsv(getSolidKmersPath().toString());			
+		}
 
 		try {
 			flinkExecEnv.execute();
@@ -216,6 +226,7 @@ public class FlinkDS extends FlinkEC {
 			IOUtils.error(e.getMessage());
 		}
 
+		kmers = null;
 		kmersDS = null;
 	}
 

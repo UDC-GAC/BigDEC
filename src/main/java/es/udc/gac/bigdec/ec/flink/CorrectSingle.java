@@ -43,7 +43,7 @@ public class CorrectSingle extends RichMapFunction<Tuple2<LongWritable,Sequence>
 	@Override
 	public void open(org.apache.flink.configuration.Configuration config) throws Exception {
 		if (fromFile)
-			KmerMap.loadFromCSV(algorithm, kmersFile);
+			KmerMap.loadFromCSV(algorithm, kmersFile, maxCounter);
 		else
 			KmerMap.loadFromBroadcast(algorithm, getRuntimeContext(), maxCounter);
 	}

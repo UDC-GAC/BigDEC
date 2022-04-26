@@ -23,8 +23,9 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.streaming.api.operators.AbstractUdfStreamOperator;
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.streaming.api.operators.AbstractStreamOperator;
 import org.apache.flink.streaming.api.operators.ChainingStrategy;
 import org.apache.flink.streaming.api.operators.OneInputStreamOperator;
 import org.apache.flink.streaming.api.operators.TimestampedCollector;
@@ -32,85 +33,70 @@ import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MapStreamBundleOperator <K, V, IN, OUT>
-extends AbstractUdfStreamOperator<OUT, MapBundleFunction<K, V, IN, OUT>> 
-implements OneInputStreamOperator<IN, OUT>, BundleTriggerCallback {
-	private static final Logger logger = LoggerFactory.getLogger(MapStreamBundleOperator.class);
+import es.udc.gac.bigdec.kmer.Kmer;
+import es.udc.gac.bigdec.kmer.KmerGenerator;
+
+public class KmerMapStreamOperator extends AbstractStreamOperator<Tuple2<Kmer,Integer>> 
+implements OneInputStreamOperator<Kmer, Tuple2<Kmer,Integer>>, BundleTriggerCallback {
+	private static final Logger logger = LoggerFactory.getLogger(KmerMapStreamOperator.class);
 	private static final long serialVersionUID = 1L;
 	private static final float LOAD_FACTOR = .75F;
 
 	/** The map in heap to store elements. */
-	private final Map<K, V> bundle;
+	private final Map<Kmer, MutableInt> kmerMap;
 
 	/** The trigger that determines how many elements should be put into a bundle. */
-	private final CountBundleTrigger<IN> trigger;
+	private final CountTrigger<Kmer> trigger;
 
 	/** Output for stream records. */
-	private transient TimestampedCollector<OUT> collector;
+	private transient TimestampedCollector<Tuple2<Kmer,Integer>> collector;
 
-	/** KeySelector is used to extract key for bundle map. */
-	private final KeySelector<IN, K> keySelector;
-
-	private transient int numOfElements = 0;
-
-	public MapStreamBundleOperator(MapBundleFunction<K, V, IN, OUT> function, CountBundleTrigger<IN> trigger, KeySelector<IN, K> keySelector) {
-		super(function);
+	public KmerMapStreamOperator(CountTrigger<Kmer> trigger) {
 		chainingStrategy = ChainingStrategy.ALWAYS;
 		this.trigger = checkNotNull(trigger, "trigger is null");
-		this.keySelector = checkNotNull(keySelector, "keySelector is null");
 		int size = (int) (Math.ceil((trigger.getMaxCount() + 1) / LOAD_FACTOR));
-		this.bundle = new HashMap<K, V>(size, LOAD_FACTOR);
-		logger.info("Limit {}, Map size {} ", trigger.getMaxCount(), size);
+		this.kmerMap = new HashMap<Kmer, MutableInt>(size, LOAD_FACTOR);
+		logger.info("Limit {}, KmerMap size {} ", trigger.getMaxCount(), size);
 	}
 
 	@Override
 	public void open() throws Exception {
 		super.open();
-
-		numOfElements = 0;
 		collector = new TimestampedCollector<>(output);
-
 		trigger.registerCallback(this);
 		// reset trigger
 		trigger.reset();
 	}
 
 	public void finish() throws Exception {
-		logger.info("Finishing stream operator: {} elements", bundle.size());
+		logger.info("Finishing k-mer map stream operator: {} elements", kmerMap.size());
 		finishBundle();
 	}
 
 	@Override
-	public void processElement(StreamRecord<IN> element) throws Exception {
-		// get the key and value for the map bundle
-		final IN input = element.getValue();
-		final K bundleKey = getKey(input);		
-		final V bundleValue = this.bundle.get(bundleKey);
+	public void processElement(StreamRecord<Kmer> element) throws Exception {
+		final Kmer kmer = element.getValue();
+		final MutableInt counter = kmerMap.get(kmer);
 
-		// get a new value after adding this element to bundle
-		final V newBundleValue = userFunction.addInput(bundleValue, input);
+		if (counter == null)
+			kmerMap.put(KmerGenerator.createKmer(kmer), new MutableInt(1));
+		else
+			counter.increment();
 
-		// update to map bundle
-		bundle.put(bundleKey, newBundleValue);
-
-		numOfElements++;
-		trigger.onElement(input);
-	}
-
-	/**
-	 * Get the key for current processing element, which will be used as the map
-	 * bundle's key.
-	 */
-	protected K getKey(IN input) throws Exception {
-		return this.keySelector.getKey(input);
+		trigger.onElement(null);
 	}
 
 	@Override
 	public void finishBundle() throws Exception {
-		if (!bundle.isEmpty()) {
-			numOfElements = 0;
-			userFunction.finishBundle(bundle, collector);
-			bundle.clear();
+		if (!kmerMap.isEmpty()) {
+			if (logger.isDebugEnabled())
+				logger.debug("Collecting {} k-mers", kmerMap.size());
+
+			for (Map.Entry<Kmer, MutableInt> entry : kmerMap.entrySet()) {
+				collector.collect(Tuple2.of(entry.getKey(), entry.getValue().getValue()));
+			}
+
+			kmerMap.clear();
 		}
 		trigger.reset();
 	}

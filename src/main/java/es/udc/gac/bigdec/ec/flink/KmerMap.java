@@ -60,14 +60,15 @@ public final class KmerMap {
 		return new HashMap<Kmer, Short>((int) (Math.ceil((numberOfKmers + 1) / LOAD_FACTOR)), LOAD_FACTOR);
 	}
 
-	public synchronized static void loadFromCSV(CorrectionAlgorithm algorithm, String kmersFile) throws IOException  {
+	public synchronized static void loadFromCSV(CorrectionAlgorithm algorithm, String kmersFile,
+			short maxCounter) throws IOException  {
 		KmerMap map = kmerMap.get(algorithm.toString());
 
 		if (map == null) {
 			timer.start(LOAD_KMERS_TIME);
 			logger.info("{}: loading k-mers on {} from {}", algorithm, InetAddress.getLocalHost().getHostName(), kmersFile);	
 			map = new KmerMap(algorithm.getNumberOfSolidKmers());
-			KmerMap.loadKmersFromCSV(kmersFile, algorithm.getKmerThreshold(), map.solidKmers);
+			KmerMap.loadKmersFromCSV(kmersFile, algorithm.getKmerThreshold(), map.solidKmers, maxCounter);
 			kmerMap.put(algorithm.toString(), map);
 			timer.stop(LOAD_KMERS_TIME);
 			logger.info("{}: loaded {} k-mers in {} seconds", algorithm, map.solidKmers.size(), timer.getTotalTime(LOAD_KMERS_TIME));
@@ -87,14 +88,12 @@ public final class KmerMap {
 			map = new KmerMap(algorithm.getNumberOfSolidKmers());
 
 			List<Tuple2<Kmer,Integer>> kmers = context.getBroadcastVariable("solidKmersDS");
+			short counter;
 
 			for (Tuple2<Kmer,Integer> kmer : kmers) {
 				if (kmer.f1 >= algorithm.getKmerThreshold()) {
-					if (kmer.f1 <= maxCounter) {
-						map.solidKmers.put(kmer.f0, kmer.f1.shortValue());
-						continue;
-					}
-					map.solidKmers.put(kmer.f0, maxCounter);
+					counter = (kmer.f1 > maxCounter)? maxCounter : kmer.f1.shortValue();
+					map.solidKmers.put(kmer.f0, counter);
 				}
 			}
 
@@ -107,7 +106,8 @@ public final class KmerMap {
 		algorithm.setSolidKmers(map.solidKmers);
 	}
 
-	private static void loadKmersFromCSV(String file, short kmerThreshold, Map<Kmer, Short> solidKmers) throws IOException {
+	private static void loadKmersFromCSV(String file, short kmerThreshold, Map<Kmer, Short> solidKmers,
+			short maxCounter) throws IOException {
 		BufferedReader br = null;
 		FSDataInputStream dis = null;
 		Path path = new Path(file);
@@ -124,6 +124,7 @@ public final class KmerMap {
 			splits = line.split(",");
 			counter =  Short.parseShort(splits[1]);
 			if (counter >= kmerThreshold) {
+				counter = (counter > maxCounter)? maxCounter : counter;
 				solidKmers.put(KmerGenerator.createKmer(Long.parseLong(splits[0], 10)), counter);
 			}
 			line = br.readLine();

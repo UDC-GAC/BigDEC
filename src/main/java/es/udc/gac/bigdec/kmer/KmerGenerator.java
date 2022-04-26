@@ -184,4 +184,43 @@ public final class KmerGenerator {
 			}
 		}
 	}
+
+	public static void generateFlinkKmers(Sequence sequence, Kmer kmer, Kmer kmerRC, byte kmerLength, boolean ignoreNBases, 
+			Collector<Kmer> listOfKmers) {
+
+		byte[] bases = sequence.getBases();
+		int i = 0;
+		final int kLen = kmerLength - 1;
+
+		while (i + kLen < bases.length) {
+			if (ignoreNBases) {
+				kmer.set(bases, i, kmerLength);
+			} else if (!kmer.load(bases, i, kmerLength)) {
+				// k-mer contains 'N' bases
+				i++;
+				continue;
+			}
+
+			// Build reverse complement representation
+			kmerRC.setRC(bases, i, kmerLength);
+
+			// Insert the canonical k-mer
+			if (kmer.lower(kmerRC))
+				listOfKmers.collect(kmer);
+			else
+				listOfKmers.collect(kmerRC);
+
+			i += kmerLength;
+
+			// Generate remaining k-mers for this read
+			while (i < bases.length) {
+				if (!ignoreNBases && Kmer.isNBase(bases[i])) {
+					i++;
+					break;
+				}
+				listOfKmers.collect(KmerGenerator.getCanonicalKmer(bases, i, kmerLength, kmer, kmerRC));
+				i++;
+			}
+		}
+	}
 }

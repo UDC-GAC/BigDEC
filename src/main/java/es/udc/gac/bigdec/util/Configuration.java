@@ -121,6 +121,7 @@ public final class Configuration {
 	public String FLINK_API = "Dataset";
 	public Boolean FLINK_OBJECT_REUSE = true;
 	public Boolean FLINK_MULTIPLE_JOB = true;
+	public Boolean FLINK_WRITE_KMERS = true;
 	public Boolean FLINK_PRE_SHUFFLE_AGGREGATOR = true;
 	public Integer FLINK_PRE_SHUFFLE_AGGREGATOR_LIMIT = 65536;
 	public Boolean HDFS_DELETE_TEMP_FILES = true;

@@ -27,14 +27,17 @@ import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.api.java.io.CsvInputFormat;
+import org.apache.flink.api.java.io.TupleCsvInputFormat;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.api.java.typeutils.TupleTypeInfo;
+import org.apache.flink.api.java.typeutils.TupleTypeInfoBase;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.operators.OneInputStreamOperator;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -47,8 +50,6 @@ import es.udc.gac.bigdec.ec.flink.CorrectPaired;
 import es.udc.gac.bigdec.ec.flink.CorrectSingle;
 import es.udc.gac.bigdec.ec.flink.FlinkEC;
 import es.udc.gac.bigdec.ec.flink.HadoopFileInputFormat;
-import es.udc.gac.bigdec.ec.flink.KmerGenPaired;
-import es.udc.gac.bigdec.ec.flink.KmerGenSingle;
 import es.udc.gac.bigdec.ec.flink.KmerHistogram;
 import es.udc.gac.bigdec.ec.flink.QsHistogramPaired;
 import es.udc.gac.bigdec.ec.flink.QsHistogramSingle;
@@ -151,14 +152,27 @@ public class FlinkDStream extends FlinkEC {
 
 	@Override
 	protected void kmerCounting(short minKmerCounter, short maxKmerCounter) {
+		DataStream<Kmer> kmers;
+
 		if (!isPaired()) {
-			kmersDS = readsDS.flatMap(new KmerGenSingle(getKmerLength(), isIgnoreNBases()));
+			kmers = readsDS.flatMap(new KmerStreamGenSingle(getKmerLength(), isIgnoreNBases()));
 		} else {
-			kmersDS = pairedReadsDS.flatMap(new KmerGenPaired(getKmerLength(), isIgnoreNBases()));
+			kmers = pairedReadsDS.flatMap(new KmerStreamGenPaired(getKmerLength(), isIgnoreNBases()));
 		}
 
-		if (getConfig().FLINK_PRE_SHUFFLE_AGGREGATOR)
-			kmersDS = kmersDS.transform("preAggregator", TypeInformation.of(new TypeHint<Tuple2<Kmer, Integer>>(){}), getCombinerOperator());
+		if (getConfig().FLINK_PRE_SHUFFLE_AGGREGATOR) {
+			KmerMapStreamOperator aggregator = new KmerMapStreamOperator(new CountTrigger<Kmer>(getConfig().FLINK_PRE_SHUFFLE_AGGREGATOR_LIMIT));
+			kmersDS = kmers.transform("preAggregator", TypeInformation.of(new TypeHint<Tuple2<Kmer,Integer>>(){}), aggregator);
+		} else {
+			kmersDS = kmers.map(new MapFunction<Kmer, Tuple2<Kmer,Integer>>() {
+				private static final long serialVersionUID = 7692644182800038854L;
+
+				@Override
+				public Tuple2<Kmer, Integer> map(Kmer kmer) throws Exception {
+					return Tuple2.of(kmer, 1);
+				}
+			});
+		}
 
 		kmersDS = kmersDS.keyBy(kmer -> kmer.f0).sum(1).filter(new FilterFunction<Tuple2<Kmer,Integer>>() {
 			private static final long serialVersionUID = 2720097123780600026L;
@@ -170,20 +184,16 @@ public class FlinkDStream extends FlinkEC {
 		});
 	}
 
-	private OneInputStreamOperator<Tuple2<Kmer, Integer>, Tuple2<Kmer, Integer>> getCombinerOperator() {
-		MapBundleFunction<Kmer, Integer, Tuple2<Kmer, Integer>, Tuple2<Kmer, Integer>> myMapBundleFunction = new MapBundleKmer();
-		KeySelector<Tuple2<Kmer, Integer>, Kmer> keyBundleSelector = (KeySelector<Tuple2<Kmer, Integer>, Kmer>) value -> value.f0;
-		CountBundleTrigger<Tuple2<Kmer, Integer>> bundleTrigger = new CountBundleTrigger<Tuple2<Kmer, Integer>>(getConfig().FLINK_PRE_SHUFFLE_AGGREGATOR_LIMIT);
-		return new MapStreamBundleOperator<Kmer, Integer, Tuple2<Kmer, Integer>,Tuple2<Kmer, Integer>>(myMapBundleFunction, bundleTrigger, keyBundleSelector);
-	}
-
 	@Override
 	protected int[] buildKmerHistrogram() throws IOException {
 		JobExecutionResult result = null;
 		TreeMap<Integer, Integer> treeMap = null;
 		int[] kmerHistogram = new int[ErrorCorrection.KMER_HISTOGRAM_SIZE];
 
-		kmersDS.map(new KmerHistogram(ErrorCorrection.KMER_HISTOGRAM_SIZE, FlinkEC.kmerHistogram));
+		kmersDS = kmersDS.map(new KmerHistogram(ErrorCorrection.KMER_HISTOGRAM_SIZE, FlinkEC.kmerHistogram));
+
+		if (getConfig().FLINK_WRITE_KMERS)
+			kmersDS.writeAsCsv(getKmersPath().toString());
 
 		try {
 			result = flinkExecEnv.execute();
@@ -212,19 +222,29 @@ public class FlinkDStream extends FlinkEC {
 
 	@Override
 	protected void writeSolidKmersAsCSV(short kmerThreshold, short maxKmerCounter) {
-		kmerCounting(kmerThreshold, maxKmerCounter);
+		DataStream<Tuple2<Long,Integer>> kmers;
 
-		kmersDS.map(new MapFunction<Tuple2<Kmer,Integer>, String>() {
-			private static final long serialVersionUID = -8083760782993252080L;
+		if (!getConfig().FLINK_WRITE_KMERS) {
+			kmerCounting(kmerThreshold, maxKmerCounter);
+			kmersDS.writeAsCsv(getSolidKmersPath().toString());
+		} else {
+			TupleTypeInfoBase<Tuple2<Long, Integer>> typeInfo =
+					new TupleTypeInfo<Tuple2<Long, Integer>>(BasicTypeInfo.LONG_TYPE_INFO, BasicTypeInfo.INT_TYPE_INFO);
+			org.apache.flink.core.fs.Path filePath = new org.apache.flink.core.fs.Path(getKmersPath().toString());
+			CsvInputFormat<Tuple2<Long, Integer>> csvIF = new TupleCsvInputFormat<Tuple2<Long, Integer>>(filePath, typeInfo);
 
-			@Override
-			public String map(Tuple2<Kmer, Integer> kmer) throws Exception {
-				if (kmer.f1 >= KMER_MAX_COUNTER)
-					return kmer.f0.toString()+","+KMER_MAX_COUNTER;
+			kmers = flinkExecEnv.createInput(csvIF, typeInfo)
+					.filter(new FilterFunction<Tuple2<Long,Integer>>() {
+						private static final long serialVersionUID = 962956339359349042L;
 
-				return kmer.f0.toString()+","+kmer.f1.toString();
-			}
-		}).writeAsText(getSolidKmersPath().toString());
+						@Override
+						public boolean filter(Tuple2<Long,Integer> kmer) {
+							return kmer.f1 >= kmerThreshold;
+						}
+					});
+
+			kmers.writeAsCsv(getSolidKmersPath().toString());
+		}
 
 		try {
 			flinkExecEnv.execute();
@@ -232,6 +252,7 @@ public class FlinkDStream extends FlinkEC {
 			IOUtils.error(e.getMessage());
 		}
 
+		kmers = null;
 		kmersDS = null;
 	}
 

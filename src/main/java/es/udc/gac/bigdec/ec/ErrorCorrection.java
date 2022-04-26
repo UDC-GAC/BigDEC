@@ -87,6 +87,7 @@ public abstract class ErrorCorrection {
 	private Path outputFile2;
 	private Path qsHistogramPath;
 	private Path kmerHistogramPath;
+	private Path kmersPath;
 	private Path solidKmersPath;
 	private Path solidKmersFile;
 	private long nsplits;
@@ -111,6 +112,7 @@ public abstract class ErrorCorrection {
 		kmerHistogram = null;
 		buildQsHistrogram = true;
 		qsHistogramPath = null;
+		kmersPath = null;
 		kmerHistogramPath = null;
 		solidKmersPath = null;
 		solidKmersFile = null;
@@ -218,6 +220,10 @@ public abstract class ErrorCorrection {
 		return kmerHistogramPath;
 	}
 
+	public Path getKmersPath() {
+		return kmersPath;
+	}
+
 	public Path getSolidKmersPath() {
 		return solidKmersPath;
 	}
@@ -279,11 +285,15 @@ public abstract class ErrorCorrection {
 
 		qsHistogramPath = new Path(options.getOutputDir()+Configuration.SLASH+"histo.qs");
 		kmerHistogramPath = new Path(options.getOutputDir()+Configuration.SLASH+"histo.kmer");
-		solidKmersPath = new Path(options.getOutputDir()+Configuration.SLASH+"kmers");
-		solidKmersFile = new Path(options.getOutputDir()+Configuration.SLASH+"kmers.solid");
+		kmersPath = new Path(options.getOutputDir()+Configuration.SLASH+"kmers");
+		solidKmersPath = new Path(options.getOutputDir()+Configuration.SLASH+"solidkmers");
+		solidKmersFile = new Path(options.getOutputDir()+Configuration.SLASH+"solidkmers.csv");
 
 		FileSystem fs = FileSystem.get(hadoopConfig);
 		blockSize = fs.getFileStatus(inputFile1).getBlockSize();
+
+		if (fs.exists(kmersPath))
+			fs.delete(kmersPath, true);
 
 		if (fs.exists(solidKmersPath))
 			fs.delete(solidKmersPath, true);
@@ -526,6 +536,13 @@ public abstract class ErrorCorrection {
 			}
 
 			timer.stop(MERGE_SOLID_KMERS_TIME);
+
+			if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE) {
+				if (config.FLINK_WRITE_KMERS && config.HDFS_DELETE_TEMP_FILES) {
+					if (fs.exists(kmersPath))
+						fs.delete(kmersPath, true);
+				}
+			}
 		} catch (IOException e) {
 			IOUtils.error(e.getMessage());
 		}
