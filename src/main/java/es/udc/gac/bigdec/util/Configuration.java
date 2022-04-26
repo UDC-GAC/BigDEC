@@ -123,7 +123,7 @@ public final class Configuration {
 	public Boolean FLINK_MULTIPLE_JOB = true;
 	public Boolean FLINK_WRITE_KMERS = true;
 	public Boolean FLINK_PRE_SHUFFLE_AGGREGATOR = true;
-	public Integer FLINK_PRE_SHUFFLE_AGGREGATOR_LIMIT = 65536;
+	public Integer FLINK_PRE_SHUFFLE_AGGREGATOR_LIMIT = 262144;
 	public Boolean HDFS_DELETE_TEMP_FILES = true;
 	public Integer HDFS_BLOCK_REPLICATION = 1;
 
