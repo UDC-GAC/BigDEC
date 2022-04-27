@@ -23,6 +23,7 @@ import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.core.fs.SafetyNetWrapperFileSystem;
 import org.apache.flink.runtime.fs.hdfs.HadoopFileSystem;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,13 +51,13 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 		String format(IN value);
 	}
 
-	public TextOuputFormat(Path outputPath) {
-		this(outputPath, "UTF-8");
-		this.replication = DFSConfigKeys.DFS_REPLICATION_DEFAULT;
-	}
-
 	public TextOuputFormat(Path outputPath, org.apache.hadoop.conf.Configuration hadoopConfig) {
 		this(outputPath, "UTF-8");
+		this.replication = hadoopConfig.getInt(DFSConfigKeys.DFS_REPLICATION_KEY, DFSConfigKeys.DFS_REPLICATION_DEFAULT);
+	}
+
+	public TextOuputFormat(String outputPath, org.apache.hadoop.conf.Configuration hadoopConfig) {
+		this(new Path(outputPath), "UTF-8");
 		this.replication = hadoopConfig.getInt(DFSConfigKeys.DFS_REPLICATION_KEY, DFSConfigKeys.DFS_REPLICATION_DEFAULT);
 	}
 
@@ -64,12 +65,6 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 		super(outputPath);
 		this.charsetName = charset;
 		this.replication = DFSConfigKeys.DFS_REPLICATION_DEFAULT;
-	}
-
-	public TextOuputFormat(Path outputPath, String charset, org.apache.hadoop.conf.Configuration hadoopConfig) {
-		super(outputPath);
-		this.charsetName = charset;
-		this.replication = hadoopConfig.getInt(DFSConfigKeys.DFS_REPLICATION_KEY, DFSConfigKeys.DFS_REPLICATION_DEFAULT);
 	}
 
 	public String getCharsetName() {
@@ -133,9 +128,8 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 
 		// Suffix the path with the parallel instance index, if needed
 		this.actualFilePath =
-				(numTasks > 1 || getOutputDirectoryMode() == OutputDirectoryMode.ALWAYS)
-				? p.suffix("/" + getDirectoryFileName(taskNumber))
-						: p;
+				(numTasks > 1 || getOutputDirectoryMode() == OutputDirectoryMode.ALWAYS)?
+						p.suffix("/" + getDirectoryFileName(taskNumber)) : p;
 
 		this.stream = null;
 
@@ -147,7 +141,7 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 				HadoopFileSystem dFS = ((HadoopFileSystem) wFS);
 				org.apache.hadoop.conf.Configuration hadoopConfig = dFS.getHadoopFileSystem().getConf();
 				long blockSize = hadoopConfig.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT);
-				int bufferSize = hadoopConfig.getInt(DFSConfigKeys.IO_FILE_BUFFER_SIZE_KEY, DFSConfigKeys.IO_FILE_BUFFER_SIZE_DEFAULT);
+				int bufferSize = hadoopConfig.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT);
 				logger.info("HDFS detected: bufferSize {}, blockSize {}, replication {}", bufferSize, blockSize, replication);
 
 				this.stream = dFS.create(this.actualFilePath, true,	bufferSize, (short) replication, blockSize);
@@ -177,7 +171,7 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 
 	@Override
 	public String toString() {
-		return "TextOF (" + getOutputFilePath() + ") - " + this.charsetName;
+		return "TextOF (" + getOutputFilePath() + ") - " + charsetName;
 	}
 
 	@Override
