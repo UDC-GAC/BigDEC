@@ -59,7 +59,7 @@ FLINK_OBJECT_REUSE=true
 FLINK_MULTIPLE_JOB=true
 
 # Write non-unique k-mers to HDFS
-FLINK_WRITE_KMERS=true
+FLINK_WRITE_KMERS=false
 
 # Enable the pre-shuffle aggregate operator. Only significant for Datastream API
 FLINK_PRE_SHUFFLE_AGGREGATOR=true
