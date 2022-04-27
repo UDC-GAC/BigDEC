@@ -20,6 +20,7 @@ package es.udc.gac.bigdec.ec;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -50,6 +51,8 @@ public class MergerThread extends Thread {
 	private static final int SLEEP_EXISTS = 1000;
 	private static final int SLEEP_EOF = 2000;
 	private static final double SLEEP_RATIO = 0.25; //25%
+	private static final int SLEEP_STE = 2000;
+	private static final int MAX_RETRIES = 3;
 
 	private Configuration config;
 	private List<Path> inputPaths;
@@ -68,6 +71,7 @@ public class MergerThread extends Thread {
 	private int increaseSleep;
 	private long sleepsLS;
 	private long sleepsEOF;
+	private long sleepsSTE;
 
 	public MergerThread(FileSystem srcFS, FileSystem dstFS, List<Path> inputPaths, BlockingQueue<Path> inputPathsQueue,
 			Path outputFile1, Path outputFile2, long outputFiles, Path done, boolean asynchronous, long fileSize,
@@ -90,6 +94,7 @@ public class MergerThread extends Thread {
 		this.increaseSleep = (int) (SLEEP_EOF * SLEEP_RATIO);
 		this.sleepsLS = 0;
 		this.sleepsEOF = 0;
+		this.sleepsSTE = 0;
 	}
 
 	public void terminate() {
@@ -150,7 +155,7 @@ public class MergerThread extends Thread {
 		}
 
 		running.set(false);
-		logger.info("MergerThread finished (sleeps: ls {}, eof {})", sleepsLS, sleepsEOF);
+		logger.info("MergerThread finished (sleeps: ls {}, eof {}, ste {})", sleepsLS, sleepsEOF, sleepsSTE);
 	}
 
 	private void synchronousMerge() throws IOException, InterruptedException {
@@ -382,7 +387,12 @@ public class MergerThread extends Thread {
 		int bytesRead = 0;
 
 		while (bytesRead >= 0) {
-			bytesRead = in.read(buffer, 0, buffer.length);
+			try {
+				bytesRead = in.read(buffer, 0, buffer.length);
+			} catch (SocketTimeoutException e) {
+				handleSocketTimeout(inputFile);
+				continue;
+			}
 
 			if (bytesRead > 0) {
 				out.write(buffer, 0, bytesRead);
@@ -405,7 +415,12 @@ public class MergerThread extends Thread {
 		logger.debug("Copying {} (incrSleep {})", inputFile, increaseSleep);
 
 		while (bytesToRead >= 0) {
-			bytesToRead = in.read(buffer, 0, buffer.length);
+			try {
+				bytesToRead = in.read(buffer, 0, buffer.length);
+			} catch (SocketTimeoutException e) {
+				handleSocketTimeout(inputFile);
+				continue;
+			}
 
 			if (bytesToRead > 0) {
 				out.write(buffer, 0, bytesToRead);
@@ -431,24 +446,41 @@ public class MergerThread extends Thread {
 				}
 
 				bytesToRead = in.available();
-				logger.debug("totalBytes {}, bytesToRead {} ({})",  totalBytes, bytesToRead, inputFile);
 			}
 
 			sleep = SLEEP_EOF;
-			bytesToRead = (bytesToRead > buffer.length)? buffer.length : bytesToRead;
-			logger.debug("bytesToRead {} ({})",  bytesToRead, inputFile);
-			bytesToRead = in.read(buffer, 0, bytesToRead);
+			logger.debug("totalBytes {}, bytesToRead {} ({})",  totalBytes, bytesToRead, inputFile);
 
-			while (bytesToRead > 0) {
-				out.write(buffer, 0, bytesToRead);
-				totalBytes += bytesToRead;
-				bytesToRead = in.read(buffer, 0, buffer.length);
+			while (bytesToRead >= 0) {
+				try {
+					bytesToRead = in.read(buffer, 0, buffer.length);
+				} catch (SocketTimeoutException e) {
+					handleSocketTimeout(inputFile);
+					continue;
+				}
+
+				if (bytesToRead > 0) {
+					out.write(buffer, 0, bytesToRead);
+					totalBytes += bytesToRead;
+				}
 			}
 		}
 
 		in.close();
+
 		logger.info("Copied {} ({} bytes)", inputFile, totalBytes);
 
 		return totalBytes;
+	}
+
+	private void handleSocketTimeout(Path inputFile) throws IOException, InterruptedException {
+		logger.warn("SocketTimeoutException copying {}", inputFile);
+
+		if (sleepsSTE == MAX_RETRIES)
+			throw new IOException("Max retries ("+sleepsSTE+") exceeded for SocketTimeoutException");
+
+
+		sleepsSTE++;
+		Thread.sleep(SLEEP_STE);
 	}
 }
