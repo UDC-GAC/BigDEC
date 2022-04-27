@@ -141,11 +141,11 @@ public class MergerThread extends Thread {
 
 				break;
 			} catch (InterruptedException ie) {
-				logger.warn("MergerThread was interrupted");
-				break;
+				running.set(false);
+				throw new RuntimeException(ie.getMessage());
 			} catch (IOException ioe) {
-				logger.warn("IOException: "+ioe.getMessage());
-				break;
+				running.set(false);
+				throw new RuntimeException(ioe.getMessage());
 			}
 		}
 
