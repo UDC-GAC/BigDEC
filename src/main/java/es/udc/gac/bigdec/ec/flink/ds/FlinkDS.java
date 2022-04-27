@@ -43,6 +43,7 @@ import es.udc.gac.bigdec.ec.flink.CorrectPaired;
 import es.udc.gac.bigdec.ec.flink.CorrectSingle;
 import es.udc.gac.bigdec.ec.flink.FlinkEC;
 import es.udc.gac.bigdec.ec.flink.HadoopFileInputFormat;
+import es.udc.gac.bigdec.ec.flink.KmerCsvOutputFormat;
 import es.udc.gac.bigdec.ec.flink.KmerGenPaired;
 import es.udc.gac.bigdec.ec.flink.KmerGenSingle;
 import es.udc.gac.bigdec.ec.flink.KmerHistogram;
@@ -171,7 +172,7 @@ public class FlinkDS extends FlinkEC {
 		if (!getConfig().FLINK_WRITE_KMERS)
 			kmersDS.output(new DiscardingOutputFormat<>());
 		else
-			kmersDS.writeAsCsv(getKmersPath().toString());
+			kmersDS.output(new KmerCsvOutputFormat(getKmersPath().toString(), getHadoopConfig()));
 
 		try {
 			result = flinkExecEnv.execute();
@@ -290,8 +291,7 @@ public class FlinkDS extends FlinkEC {
 	}
 
 	private void correctSingleDataset(CorrectionAlgorithm algorithm, Path kmersFile) {
-		org.apache.flink.core.fs.Path path = new org.apache.flink.core.fs.Path(algorithm.getOutputPath1().toString());
-		TextOuputFormat<Sequence> tof = new TextOuputFormat<Sequence>(path, getHadoopConfig());
+		TextOuputFormat<Sequence> tof = new TextOuputFormat<Sequence>(algorithm.getOutputPath1().toString(), getHadoopConfig());
 
 		// Correct and write reads
 		if (getConfig().KEEP_ORDER) {
@@ -315,10 +315,8 @@ public class FlinkDS extends FlinkEC {
 	}
 
 	private void correctPairedDataset(CorrectionAlgorithm algorithm, Path kmersFile) {
-		org.apache.flink.core.fs.Path path1 = new org.apache.flink.core.fs.Path(algorithm.getOutputPath1().toString());
-		org.apache.flink.core.fs.Path path2 = new org.apache.flink.core.fs.Path(algorithm.getOutputPath2().toString());
-		TextOuputFormat<Sequence> tof1 = new TextOuputFormat<Sequence>(path1, getHadoopConfig());
-		TextOuputFormat<Sequence> tof2 = new TextOuputFormat<Sequence>(path2, getHadoopConfig());
+		TextOuputFormat<Sequence> tof1 = new TextOuputFormat<Sequence>(algorithm.getOutputPath1().toString(), getHadoopConfig());
+		TextOuputFormat<Sequence> tof2 = new TextOuputFormat<Sequence>(algorithm.getOutputPath2().toString(), getHadoopConfig());
 		DataSet<Tuple3<LongWritable,Sequence,Sequence>> corrReadsDS;
 
 		// Correct and write reads
