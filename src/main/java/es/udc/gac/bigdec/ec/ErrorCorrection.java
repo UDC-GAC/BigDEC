@@ -697,6 +697,11 @@ public abstract class ErrorCorrection {
 	}
 
 	private Map<String,MergerThread> runMergerThreads(List<Path> outputPaths) throws IOException {
+		int timeout = (hadoopConfig.getInt("dfs.client.socket-timeout", 120000)) * 2;
+		hadoopConfig.setInt("ipc.ping.interval", timeout);
+		hadoopConfig.setInt("ipc.client.rpc-timeout.ms", timeout);
+		hadoopConfig.setInt("dfs.client.socket-timeout", timeout);
+
 		FileSystem srcFS = FileSystem.newInstance(hadoopConfig);
 		Path mergeOutputPath = new Path(options.getMergeOutputDir());
 		FileSystem dstFS = mergeOutputPath.getFileSystem(hadoopConfig);
@@ -751,8 +756,8 @@ public abstract class ErrorCorrection {
 		for (MergerThread thread: mergerThreads.values())
 			thread.start();
 
-		logger.info("outputFiles {}, partitionSize {}, sequenceSize {}, fileSize {}", outputFiles, 
-				getEstimatedPartitionSize(), sequenceSize, fileSize);
+		logger.info("outputFiles {}, partitionSize {}, sequenceSize {}, fileSize {}, timeout {} ms", outputFiles, 
+				getEstimatedPartitionSize(), sequenceSize, fileSize, timeout);
 
 		return mergerThreads;
 	}
