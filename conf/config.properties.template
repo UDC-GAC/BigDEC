@@ -64,7 +64,7 @@ FLINK_WRITE_KMERS=false
 # Enable the pre-shuffle aggregate operator. Only significant for Datastream API
 FLINK_PRE_SHUFFLE_AGGREGATOR=true
 
-# When the limit is reached, the pre-aggregate operator will emit events downtream
+# When limit is reached, the pre-aggregate operator will emit events downstream
 FLINK_PRE_SHUFFLE_AGGREGATOR_LIMIT=262144
 
 ###################
