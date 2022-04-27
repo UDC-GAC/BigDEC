@@ -114,7 +114,7 @@ public final class KmerMap {
 		FileSystem fs = path.getFileSystem(Job.getInstance().getConfiguration());
 		String line;
 		String[] splits;
-		short counter;
+		int counter;
 
 		dis = fs.open(path);
 		br = new BufferedReader(new InputStreamReader(dis));
@@ -122,10 +122,10 @@ public final class KmerMap {
 
 		while (line != null) {
 			splits = line.split(",");
-			counter =  Short.parseShort(splits[1]);
+			counter =  Integer.parseInt(splits[1]);
 			if (counter >= kmerThreshold) {
 				counter = (counter > maxCounter)? maxCounter : counter;
-				solidKmers.put(KmerGenerator.createKmer(Long.parseLong(splits[0], 10)), counter);
+				solidKmers.put(KmerGenerator.createKmer(Long.parseLong(splits[0], 10)), (short) counter);
 			}
 			line = br.readLine();
 		}
