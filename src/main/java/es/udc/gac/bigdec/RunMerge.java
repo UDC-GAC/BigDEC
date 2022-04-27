@@ -43,7 +43,7 @@ import es.udc.gac.bigdec.util.Timer;
 public class RunMerge extends Configured implements Tool {
 
 	public static final long BLOCK_SIZE_DEFAULT = 128 * 1024 * 1024;
-	public static final int BUFFER_SIZE_DEFAULT = 128 * 1024;
+	public static final int BUFFER_SIZE_DEFAULT = 8 * 1024;
 
 	private static final Logger logger = LoggerFactory.getLogger(RunMerge.class);
 	private static final Timer timer = new Timer();
