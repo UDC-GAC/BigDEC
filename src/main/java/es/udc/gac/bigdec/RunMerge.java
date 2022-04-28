@@ -200,7 +200,7 @@ public class RunMerge extends Configured implements Tool {
 		if(!parse(args))
 			return -1;
 
-		FileSystem srcFS  = FileSystem.get(conf);
+		FileSystem srcFS  = FileSystem.newInstance(conf);
 		Path inputPath = srcFS.resolvePath(new Path(inputDir));
 		Path outputPath = new Path(outputFile);
 		FileSystem dstFS  = outputPath.getFileSystem(conf);

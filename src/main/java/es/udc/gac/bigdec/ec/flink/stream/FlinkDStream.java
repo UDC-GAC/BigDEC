@@ -38,7 +38,6 @@ import org.apache.flink.api.java.typeutils.TupleTypeInfo;
 import org.apache.flink.api.java.typeutils.TupleTypeInfoBase;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -109,7 +108,7 @@ public class FlinkDStream extends FlinkEC {
 		// Create sequence parser
 		SequenceParser parser = SequenceParserFactory.createParser(getFileFormat());
 
-		long inputPath1Length = FileSystem.get(getHadoopConfig()).getFileStatus(getInputFile1()).getLen();
+		long inputPath1Length = getFileSystem().getFileStatus(getInputFile1()).getLen();
 
 		// Create Range partitioner
 		partitioner = new RangePartitioner(inputPath1Length, getParallelism());
@@ -194,7 +193,7 @@ public class FlinkDStream extends FlinkEC {
 		kmersDS = kmersDS.map(new KmerHistogram(ErrorCorrection.KMER_HISTOGRAM_SIZE, FlinkEC.kmerHistogram));
 
 		if (getConfig().FLINK_WRITE_KMERS)
-			kmersDS.writeUsingOutputFormat(new KmerCsvOutputFormat(getKmersPath().toString(), getHadoopConfig()));
+			kmersDS.writeUsingOutputFormat(new KmerCsvOutputFormat(getKmersPath().toString(), getConfig().HDFS_BLOCK_REPLICATION));
 
 		try {
 			result = flinkExecEnv.execute();
@@ -272,14 +271,12 @@ public class FlinkDStream extends FlinkEC {
 
 	@Override
 	protected void runErrorCorrection(CorrectionAlgorithm algorithm) {
-		if (!isPaired()) {
-			putMergePath(algorithm.getOutputPath1());
-			correctSingleDataset(algorithm, getSolidKmersFile());
-		} else {
-			putMergePath(algorithm.getOutputPath1());
-			putMergePath(algorithm.getOutputPath2());
-			correctPairedDataset(algorithm, getSolidKmersFile());
-		}
+		if (!isPaired())
+			correctSingleDataset(readsDS, algorithm, algorithm.getOutputPath1(), getSolidKmersFile());
+		else
+			correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
+
+		putMergePath(algorithm.getOutputPath1());
 
 		try {
 			flinkExecEnv.execute();
@@ -298,9 +295,9 @@ public class FlinkDStream extends FlinkEC {
 			algorithm.printConfig();
 
 			if (!isPaired())
-				correctSingleDataset(algorithm, getSolidKmersFile());
+				correctSingleDataset(readsDS, algorithm, algorithm.getOutputPath1(), getSolidKmersFile());
 			else
-				correctPairedDataset(algorithm, getSolidKmersFile());
+				correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
 		}
 
 		try {
@@ -316,8 +313,8 @@ public class FlinkDStream extends FlinkEC {
 		pairedReadsDS = null;
 	}
 
-	private void correctSingleDataset(CorrectionAlgorithm algorithm, Path kmersFile) {
-		TextOuputFormat<Sequence> tof = new TextOuputFormat<Sequence>(algorithm.getOutputPath1().toString(), getHadoopConfig());
+	private void correctSingleDataset(DataStream<Tuple2<LongWritable,Sequence>> readsDS, CorrectionAlgorithm algorithm, Path file, Path kmersFile) {
+		TextOuputFormat<Sequence> tof = new TextOuputFormat<Sequence>(file.toString(), getConfig().HDFS_BLOCK_REPLICATION);
 
 		// Correct and write reads
 		if (getCLIOptions().runMergerThread()) {
@@ -332,19 +329,19 @@ public class FlinkDStream extends FlinkEC {
 		}
 	}
 
-	private void correctPairedDataset(CorrectionAlgorithm algorithm, Path kmersFile) {
-		TextOuputFormat<Sequence> tof1 = new TextOuputFormat<Sequence>(algorithm.getOutputPath1().toString(), getHadoopConfig());
-		TextOuputFormat<Sequence> tof2 = new TextOuputFormat<Sequence>(algorithm.getOutputPath2().toString(), getHadoopConfig());
+	private void correctPairedDataset(DataStream<Tuple3<LongWritable,Sequence,Sequence>> readsDS, CorrectionAlgorithm algorithm, Path kmersFile) {
+		TextOuputFormat<Sequence> tof1 = new TextOuputFormat<Sequence>(algorithm.getOutputPath1().toString(), getConfig().HDFS_BLOCK_REPLICATION);
+		TextOuputFormat<Sequence> tof2 = new TextOuputFormat<Sequence>(algorithm.getOutputPath2().toString(), getConfig().HDFS_BLOCK_REPLICATION);
 		DataStream<Tuple3<LongWritable,Sequence,Sequence>> corrReadsDS;
 
 		// Correct and write reads
 		if (getCLIOptions().runMergerThread()) {
 			getLogger().info("Range-Partitioner");
 
-			corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
+			corrReadsDS = readsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
 					.partitionCustom(partitioner, 0);
 		} else {
-			corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER));
+			corrReadsDS = readsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER));
 		}
 
 		corrReadsDS.map(read -> read.f1).writeUsingOutputFormat(tof1);

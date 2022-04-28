@@ -48,10 +48,10 @@ public class MergerThread extends Thread {
 
 	private static final Logger logger = LoggerFactory.getLogger(MergerThread.class);
 	private static final int SLEEP_LS = 2000;
-	private static final int SLEEP_EXISTS = 1000;
+	private static final int SLEEP_EXISTS = 2000;
 	private static final int SLEEP_EOF = 2000;
 	private static final double SLEEP_RATIO = 0.25; //25%
-	private static final int SLEEP_STE = 2000;
+	private static final int SLEEP_STE = 3000;
 	private static final int MAX_RETRIES = 3;
 
 	private Configuration config;
@@ -112,7 +112,7 @@ public class MergerThread extends Thread {
 	public void run() {
 		running.set(true);
 
-		logger.info("bufferSize {}, blockSize {}, replication factor {}", buffer.length, blockSize, config.HDFS_BLOCK_REPLICATION.shortValue());
+		logger.info("bufferSize {}, blockSize {}, replication factor {}", buffer.length, blockSize, config.HDFS_BLOCK_REPLICATION);
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Paths to merge");
@@ -187,10 +187,10 @@ public class MergerThread extends Thread {
 			else
 				outputFile = new Path(outputFile2+"."+inputPath.getName());
 
-			logger.info("Merging from {} to {}", inputPath, outputFile);
-
 			// Create output file
-			out = dstFS.create(outputFile, true, buffer.length, config.HDFS_BLOCK_REPLICATION.shortValue(), blockSize);
+			out = dstFS.create(outputFile, true, buffer.length, config.HDFS_BLOCK_REPLICATION, blockSize);
+
+			logger.info("Merging from {} to {}", inputPath, outputFile);
 
 			// Get input files
 			inputFiles = RunMerge.getFiles(srcFS, inputPath, config.KEEP_ORDER);
@@ -233,26 +233,25 @@ public class MergerThread extends Thread {
 		};
 
 		for (Path inputPath: inputPaths) {
+			while (!srcFS.exists(inputPath))
+				Thread.sleep(SLEEP_EXISTS);
+
 			if (inputPath.getParent().equals(IOUtils.getOutputPath1()))
 				outputFile = new Path(outputFile1+"."+inputPath.getName());
 			else
 				outputFile = new Path(outputFile2+"."+inputPath.getName());
 
-			while (!srcFS.exists(inputPath))
-				Thread.sleep(SLEEP_EXISTS);
+			// Create output file
+			out = dstFS.create(outputFile, true, buffer.length, config.HDFS_BLOCK_REPLICATION, blockSize);
 
 			pattern = new Path(inputPath+Configuration.SLASH+prefix+"*");
 			logger.info("Merging from {} to {}", pattern, outputFile);
-
-			// Create output file
-			out = dstFS.create(outputFile, true, buffer.length, config.HDFS_BLOCK_REPLICATION.shortValue(), blockSize);
 
 			processedFiles = 0;
 			filesToProcess.clear();
 			filesProcessed.clear();
 			filesReadyToProcess.clear();
 			int nextFile = firstFileNumber;
-			Thread.sleep(SLEEP_LS);
 
 			while (processedFiles < outputFiles) {
 				// Try to get new input files to process
@@ -348,18 +347,18 @@ public class MergerThread extends Thread {
 		}
 
 		for (Path inputPath: inputPaths) {
+			while (!srcFS.exists(inputPath))
+				Thread.sleep(SLEEP_EXISTS);
+
 			if (inputPath.getParent().equals(IOUtils.getOutputPath1()))
 				outputFile = new Path(outputFile1+"."+inputPath.getName());
 			else
 				outputFile = new Path(outputFile2+"."+inputPath.getName());
 
-			while (!srcFS.exists(inputPath))
-				Thread.sleep(SLEEP_EXISTS);
+			// Create output file
+			out = dstFS.create(outputFile, true, buffer.length, config.HDFS_BLOCK_REPLICATION, blockSize);
 
 			logger.info("Merging from {} to {}", inputPath, outputFile);
-
-			// Create output file
-			out = dstFS.create(outputFile, true, buffer.length, config.HDFS_BLOCK_REPLICATION.shortValue(), blockSize);
 
 			filesToProcess.clear();
 
@@ -381,7 +380,7 @@ public class MergerThread extends Thread {
 		}
 	}
 
-	private long copyFile(Path inputFile, FSDataOutputStream out) throws IOException, InterruptedException {
+	private long copyFile(Path inputFile, FSDataOutputStream out) throws IOException {
 		FSDataInputStream in = srcFS.open(inputFile);
 		long totalBytes = 0;
 		int bytesRead = 0;
@@ -406,13 +405,13 @@ public class MergerThread extends Thread {
 		return totalBytes;
 	}
 
-	private long fullyCopyFile(Path inputFile, FSDataOutputStream out, long fileSize) throws IOException, InterruptedException {
+	private long fullyCopyFile(Path inputFile, FSDataOutputStream out, long fileSize) throws IOException {
 		FSDataInputStream in = srcFS.open(inputFile);
 		long totalBytes = 0;
 		int bytesToRead = 0;
 		int sleep = SLEEP_EOF;
 
-		logger.debug("Copying {} (incrSleep {})", inputFile, increaseSleep);
+		logger.info("Copying {} (incrSleep {})", inputFile, increaseSleep);
 
 		while (bytesToRead >= 0) {
 			try {
@@ -428,24 +427,29 @@ public class MergerThread extends Thread {
 			}
 		}
 
+		logger.info("EOF {} ({} bytes)", inputFile, totalBytes);
+
 		// EOF
 		while (totalBytes < fileSize) {
 			while (bytesToRead <= 0) {
-				in.close();
-				logger.debug("EOF (sleep {}, {})", sleep, inputFile);
-				Thread.sleep(sleep);
-				sleepsEOF++;
-				in = srcFS.open(inputFile);
-
 				try {
+					in.close();
+					sleepsEOF++;
+					Thread.sleep(sleep);
+
+					in = srcFS.open(inputFile);
+
 					if (totalBytes > 0)
 						in.seek(totalBytes);
+
+					bytesToRead = in.available();
+				} catch (InterruptedException e) {
+					logger.warn("InterruptedException: {}", e.getMessage());
+					continue;
 				} catch (EOFException eof) {
 					sleep += increaseSleep;
 					continue;
 				}
-
-				bytesToRead = in.available();
 			}
 
 			sleep = SLEEP_EOF;
@@ -473,14 +477,18 @@ public class MergerThread extends Thread {
 		return totalBytes;
 	}
 
-	private void handleSocketTimeout(Path inputFile) throws IOException, InterruptedException {
-		logger.warn("SocketTimeoutException copying {}", inputFile);
+	private void handleSocketTimeout(Path inputFile) throws IOException {
+		logger.warn("SocketTimeoutException while copying {}", inputFile);
 
 		if (sleepsSTE == MAX_RETRIES)
 			throw new IOException("Max retries ("+sleepsSTE+") exceeded for SocketTimeoutException");
 
-
 		sleepsSTE++;
-		Thread.sleep(SLEEP_STE);
+
+		try {
+			Thread.sleep(SLEEP_STE);
+		} catch (InterruptedException e) {
+			logger.warn("InterruptedException: {}", e.getMessage());
+		}
 	}
 }

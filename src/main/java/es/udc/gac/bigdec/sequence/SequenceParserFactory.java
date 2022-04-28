@@ -43,7 +43,6 @@ public final class SequenceParserFactory {
 
 	public static FileFormat autoDetectFileFormat(FileSystem fs, Path file) throws IOException {
 		FileFormat format = FileFormat.FILE_FORMAT_UNKNOWN;
-
 		FSDataInputStream reader = fs.open(file);
 
 		// Read first byte

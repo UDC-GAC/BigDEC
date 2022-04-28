@@ -115,7 +115,7 @@ public final class IOUtils {
 		FileSystem srcFS = null, dstFS = null;
 
 		// Check input paths
-		srcFS = FileSystem.get(hadoopConfig);
+		srcFS = FileSystem.newInstance(hadoopConfig);
 		inputPath1 = srcFS.resolvePath(new Path(options.getInputFile1()));
 		inputPath1Length = srcFS.getFileStatus(inputPath1).getLen();
 		inputPath1LengthMB = IOUtils.ByteToMiB(inputPath1Length);
@@ -239,7 +239,6 @@ public final class IOUtils {
 			mergeOutputPath = dstFS.resolvePath(mergeOutputPath);
 			options.setMergeOutputDir(mergeOutputPath.toString());
 		} else {
-			dstFS = FileSystem.get(hadoopConfig);
 			options.setMergeOutputDir(outputPath.toString());
 		}
 
@@ -274,7 +273,7 @@ public final class IOUtils {
 	}
 
 	public static FileFormat getInputFileFormat(org.apache.hadoop.conf.Configuration hadoopConf, Path inputPath) throws IOException {
-		FileSystem fs = FileSystem.get(hadoopConf);
+		FileSystem fs = FileSystem.newInstance(hadoopConf);
 		FileFormat format = FileFormat.FILE_FORMAT_UNKNOWN;
 
 		// Try to autodetect the input file format

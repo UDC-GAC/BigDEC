@@ -41,6 +41,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.UnsupportedCharsetException;
 
 public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> implements InputTypeConfigurable {
 
@@ -52,7 +55,7 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 	private transient Writer wrt;
 	private transient boolean fileCreated;
 	private transient Path actualFilePath;
-	private int replication;
+	private short replication;
 	private String charsetName;
 
 	/**
@@ -64,19 +67,35 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 	public KmerCsvOutputFormat(Path outputPath) {
 		super(outputPath);
 		this.replication = DFSConfigKeys.DFS_REPLICATION_DEFAULT;
+		this.charsetName = null;
 	}
 
-	public KmerCsvOutputFormat(Path outputPath, org.apache.hadoop.conf.Configuration hadoopConfig) {
+	public KmerCsvOutputFormat(Path outputPath, short replication) {
 		super(outputPath);
-		this.replication = hadoopConfig.getInt(DFSConfigKeys.DFS_REPLICATION_KEY, DFSConfigKeys.DFS_REPLICATION_DEFAULT);
+		this.replication = replication;
+		this.charsetName = null;
 	}
 
-	public KmerCsvOutputFormat(String outputPath, org.apache.hadoop.conf.Configuration hadoopConfig) {
+	public KmerCsvOutputFormat(String outputPath, short replication) {
 		super(new Path(outputPath));
-		this.replication = hadoopConfig.getInt(DFSConfigKeys.DFS_REPLICATION_KEY, DFSConfigKeys.DFS_REPLICATION_DEFAULT);
+		this.replication = replication;
+		this.charsetName = null;
 	}
 
-	public void setCharsetName(String charsetName) {
+	public String getCharsetName() {
+		return charsetName;
+	}
+
+	public void setCharsetName(String charsetName) throws IllegalCharsetNameException, UnsupportedCharsetException {
+		if (charsetName == null) {
+			throw new NullPointerException();
+		}
+
+		if (!Charset.isSupported(charsetName)) {
+			throw new UnsupportedCharsetException(
+					"The charset " + charsetName + " is not supported.");
+		}
+
 		this.charsetName = charsetName;
 	}
 
@@ -139,7 +158,7 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 				int bufferSize = hadoopConfig.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT);
 				logger.info("HDFS detected: bufferSize {}, blockSize {}, replication {}", bufferSize, blockSize, replication);
 
-				this.stream = dFS.create(this.actualFilePath, true,	bufferSize, (short) replication, blockSize);
+				this.stream = dFS.create(this.actualFilePath, true,	bufferSize, replication, blockSize);
 			}
 		}
 
@@ -149,11 +168,9 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 		// at this point, the file creation must have succeeded, or an exception has been thrown
 		this.fileCreated = true;
 
-		this.wrt =
-				this.charsetName == null
-				? new OutputStreamWriter(new BufferedOutputStream(this.stream, 4096))
-						: new OutputStreamWriter(
-								new BufferedOutputStream(this.stream, 4096), this.charsetName);
+		this.wrt = this.charsetName == null?
+				new OutputStreamWriter(new BufferedOutputStream(this.stream, 4096))
+				: new OutputStreamWriter(new BufferedOutputStream(this.stream, 4096), this.charsetName);
 	}
 
 	@Override
@@ -190,7 +207,7 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 			try {
 				close();
 			} catch (IOException e) {
-				logger.warn("Could not properly close FileOutputFormat", e);
+				logger.error("Could not properly close KmerCsvOutputFormat", e);
 			}
 
 			try {
@@ -198,7 +215,7 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 			} catch (FileNotFoundException e) {
 				// ignore, may not be visible yet or may be already removed
 			} catch (Throwable t) {
-				logger.warn("Could not remove the incomplete file " + actualFilePath, t);
+				logger.error("Could not remove the incomplete file " + actualFilePath, t);
 			}
 		}
 	}
@@ -211,9 +228,8 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 	public void setInputType(TypeInformation<?> type, ExecutionConfig executionConfig) {
 		if (!type.isTupleType()) {
 			throw new InvalidProgramException(
-					"The "
-							+ KmerCsvOutputFormat.class.getSimpleName()
-							+ " can only be used to write tuple data sets.");
+					"The " + KmerCsvOutputFormat.class.getSimpleName()
+					+ " can only be used to write tuple data sets.");
 		}
 	}
 }

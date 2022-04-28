@@ -45,25 +45,27 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 	private transient Charset charset;
 	private transient boolean fileCreated;
 	private transient Path actualFilePath;
-	private int replication;
+	private short replication;
 
 	public interface TextFormatter<IN> extends Serializable {
 		String format(IN value);
 	}
 
-	public TextOuputFormat(Path outputPath, org.apache.hadoop.conf.Configuration hadoopConfig) {
-		this(outputPath, "UTF-8");
-		this.replication = hadoopConfig.getInt(DFSConfigKeys.DFS_REPLICATION_KEY, DFSConfigKeys.DFS_REPLICATION_DEFAULT);
-	}
-
-	public TextOuputFormat(String outputPath, org.apache.hadoop.conf.Configuration hadoopConfig) {
-		this(new Path(outputPath), "UTF-8");
-		this.replication = hadoopConfig.getInt(DFSConfigKeys.DFS_REPLICATION_KEY, DFSConfigKeys.DFS_REPLICATION_DEFAULT);
-	}
-
-	public TextOuputFormat(Path outputPath, String charset) {
+	public TextOuputFormat(Path outputPath, short replication) {
 		super(outputPath);
-		this.charsetName = charset;
+		this.charsetName = "UTF-8";
+		this.replication = replication;
+	}
+
+	public TextOuputFormat(String outputPath, short replication) {
+		super(new Path(outputPath));
+		this.charsetName = "UTF-8";
+		this.replication = replication;
+	}
+
+	public TextOuputFormat(Path outputPath) {
+		super(outputPath);
+		this.charsetName = "UTF-8";
 		this.replication = DFSConfigKeys.DFS_REPLICATION_DEFAULT;
 	}
 
@@ -71,8 +73,7 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 		return charsetName;
 	}
 
-	public void setCharsetName(String charsetName)
-			throws IllegalCharsetNameException, UnsupportedCharsetException {
+	public void setCharsetName(String charsetName) throws IllegalCharsetNameException, UnsupportedCharsetException {
 		if (charsetName == null) {
 			throw new NullPointerException();
 		}
@@ -144,7 +145,7 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 				int bufferSize = hadoopConfig.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT);
 				logger.info("HDFS detected: bufferSize {}, blockSize {}, replication {}", bufferSize, blockSize, replication);
 
-				this.stream = dFS.create(this.actualFilePath, true,	bufferSize, (short) replication, blockSize);
+				this.stream = dFS.create(this.actualFilePath, true,	bufferSize, replication, blockSize);
 			}
 		}
 
@@ -182,7 +183,7 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 			try {
 				close();
 			} catch (IOException e) {
-				logger.warn("Could not properly close FileOutputFormat", e);
+				logger.error("Could not properly close TextOuputFormat", e);
 			}
 
 			try {
@@ -190,7 +191,7 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 			} catch (FileNotFoundException e) {
 				// ignore, may not be visible yet or may be already removed
 			} catch (Throwable t) {
-				logger.warn("Could not remove the incomplete file " + actualFilePath, t);
+				logger.error("Could not remove the incomplete file " + actualFilePath, t);
 			}
 		}
 	}

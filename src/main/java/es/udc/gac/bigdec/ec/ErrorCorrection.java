@@ -68,6 +68,7 @@ public abstract class ErrorCorrection {
 
 	private Configuration config;
 	private CLIOptions options;
+	private FileSystem fs;
 	private byte kmerLength;
 	private int[] kmerHistogram;
 	private FileFormat fileFormat;
@@ -97,6 +98,7 @@ public abstract class ErrorCorrection {
 	public ErrorCorrection(Configuration config, CLIOptions options) {
 		this.config = config;
 		this.options = options;
+		fs = null;
 		kmerLength = options.getKmerLength();
 		parallelism = 1;
 		nsplits = 1;
@@ -158,6 +160,10 @@ public abstract class ErrorCorrection {
 
 	public boolean isPaired() {
 		return options.isPaired();
+	}
+
+	public FileSystem getFileSystem() {
+		return fs;
 	}
 
 	public int getParallelism() {
@@ -277,6 +283,8 @@ public abstract class ErrorCorrection {
 	public void createHistograms(Path inputFile1, Path inputFile2, long nsplits) throws IOException {
 		this.inputFile1 = inputFile1;
 		this.inputFile2 = inputFile2;
+		fs = FileSystem.newInstance(hadoopConfig);
+		blockSize = fs.getFileStatus(inputFile1).getBlockSize();
 
 		outputFile1 = new Path(options.getMergeOutputDir()+Configuration.SLASH+inputFile1.getName());
 
@@ -288,9 +296,6 @@ public abstract class ErrorCorrection {
 		kmersPath = new Path(options.getOutputDir()+Configuration.SLASH+"kmers");
 		solidKmersPath = new Path(options.getOutputDir()+Configuration.SLASH+"solidkmers");
 		solidKmersFile = new Path(options.getOutputDir()+Configuration.SLASH+"solidkmers.csv");
-
-		FileSystem fs = FileSystem.get(hadoopConfig);
-		blockSize = fs.getFileStatus(inputFile1).getBlockSize();
 
 		if (fs.exists(kmersPath))
 			fs.delete(kmersPath, true);
@@ -393,7 +398,6 @@ public abstract class ErrorCorrection {
 
 	private void analyzeHistograms() throws IOException {
 		List<CorrectionAlgorithm> remove = new ArrayList<CorrectionAlgorithm>();
-		FileSystem fs = FileSystem.get(hadoopConfig);
 
 		if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE) {
 			if (buildQsHistrogram && qsHistogram == null)
@@ -525,8 +529,6 @@ public abstract class ErrorCorrection {
 		// Merge k-mer files
 		try {
 			timer.start(MERGE_SOLID_KMERS_TIME);
-
-			FileSystem fs = FileSystem.get(hadoopConfig);
 
 			if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE && getParallelism() == 1) {
 				fs.rename(getSolidKmersPath(), getSolidKmersFile());
@@ -702,7 +704,6 @@ public abstract class ErrorCorrection {
 		hadoopConfig.setInt("ipc.client.rpc-timeout.ms", timeout);
 		hadoopConfig.setInt("dfs.client.socket-timeout", timeout);
 
-		FileSystem srcFS = FileSystem.newInstance(hadoopConfig);
 		Path mergeOutputPath = new Path(options.getMergeOutputDir());
 		FileSystem dstFS = mergeOutputPath.getFileSystem(hadoopConfig);
 		Map<String,MergerThread> mergerThreads = new HashMap<String,MergerThread>(outputPaths.size());
@@ -716,6 +717,8 @@ public abstract class ErrorCorrection {
 			outputFiles = getParallelism();
 
 		if (!config.MULTITHREAD_MERGE) {
+			FileSystem srcFS = FileSystem.newInstance(hadoopConfig);
+
 			MergerThread mergerThread = new MergerThread(srcFS, dstFS, outputPaths, null,
 					outputFile1, outputFile2, outputFiles, done, true, fileSize, blockSize, config, hadoopConfig);
 
@@ -723,8 +726,10 @@ public abstract class ErrorCorrection {
 		} else {
 			MergerThread mergerThread;
 			List<Path> paths;
+			FileSystem srcFS;
 
 			for (CorrectionAlgorithm algorithm: correctionAlgorithms) {
+				srcFS = FileSystem.newInstance(hadoopConfig);
 				paths = new ArrayList<Path>();
 				paths.add(new Path(algorithm.getOutputPath1().toString()));
 				BlockingQueue<Path> queue = new ArrayBlockingQueue<Path>(1);
