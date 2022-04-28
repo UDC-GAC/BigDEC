@@ -103,9 +103,13 @@ public class MergerThread extends Thread {
 			interrupt();
 	}
 
-	public void put(Path path) throws InterruptedException {
+	public void putPath(Path path) throws InterruptedException {
 		if (inputPathsQueue != null)
 			inputPathsQueue.put(path);
+	}
+
+	public List<Path> getPaths() {
+		return inputPaths;
 	}
 
 	@Override
@@ -220,17 +224,17 @@ public class MergerThread extends Thread {
 
 		logger.info("AsynchronousMerge (prefix {}, suffix {}, fileSize {})", prefix, suffix, fileSize);
 
-		if (inputPathsQueue != null) {
-			logger.info("Waiting to receive signal from main thread");
-			// Wait until notified from main thread
-			inputPathsQueue.take();
-		}
-
 		PathFilter filter = new PathFilter() {
 			public boolean accept(Path file) {
 				return (!filesProcessed.contains(file) && !filesReadyToProcess.contains(file));
 			}
 		};
+
+		if (inputPathsQueue != null) {
+			logger.info("Waiting to receive signal from main thread");
+			// Wait until notified from main thread
+			inputPathsQueue.take();
+		}
 
 		for (Path inputPath: inputPaths) {
 			while (!srcFS.exists(inputPath))
@@ -411,7 +415,7 @@ public class MergerThread extends Thread {
 		int bytesToRead = 0;
 		int sleep = SLEEP_EOF;
 
-		logger.info("Copying {} (incrSleep {})", inputFile, increaseSleep);
+		logger.info("Copying {}", inputFile);
 
 		while (bytesToRead >= 0) {
 			try {

@@ -61,6 +61,10 @@ FLINK_MULTIPLE_JOB=true
 # Write non-unique k-mers to HDFS
 FLINK_WRITE_KMERS=false
 
+# Launch two merger threads for paired-end datasets. This option is only significant
+# when merge is enabled and MULTITHREAD_MERGE=true
+FLINK_PAIRED_MERGE=false
+
 # Enable the pre-shuffle aggregate operator. Only significant for Datastream API
 FLINK_PRE_SHUFFLE_AGGREGATOR=true
 

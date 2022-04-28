@@ -257,7 +257,14 @@ public abstract class ErrorCorrection {
 	public void putMergePath(Path path) {
 		if (mergerThreads != null && config.MULTITHREAD_MERGE) {
 			try {
-				mergerThreads.get(path.toString()).put(path);
+				MergerThread thread = mergerThreads.get(path.toString());
+
+				if (thread != null) {
+					thread.putPath(path);
+				} else {
+					if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE && config.FLINK_PAIRED_MERGE)
+						logger.warn("MergerThread for {} does not exist", path.toString());
+				}
 			} catch (InterruptedException e) {
 				IOUtils.error(e.getMessage());
 			}
@@ -734,26 +741,24 @@ public abstract class ErrorCorrection {
 				paths.add(new Path(algorithm.getOutputPath1().toString()));
 				BlockingQueue<Path> queue = new ArrayBlockingQueue<Path>(1);
 
-				if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE && !config.FLINK_MULTIPLE_JOB)
-					queue = null;
-
 				mergerThread = new MergerThread(srcFS, dstFS, paths, queue,
 						outputFile1, outputFile2, outputFiles, done, true, fileSize, blockSize, config, hadoopConfig);
 
 				mergerThreads.put(algorithm.getOutputPath1().toString(), mergerThread);
 
 				if (isPaired()) {
-					paths = new ArrayList<Path>();
-					paths.add(new Path(algorithm.getOutputPath2().toString()));
-					BlockingQueue<Path> pairedQueue = new ArrayBlockingQueue<Path>(1);
+					if (RunEC.EXECUTION_ENGINE == ExecutionEngine.SPARK_MODE || config.FLINK_PAIRED_MERGE) {
+						paths = new ArrayList<Path>();
+						paths.add(new Path(algorithm.getOutputPath2().toString()));
+						BlockingQueue<Path> pairedQueue = new ArrayBlockingQueue<Path>(1);
 
-					if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE && !config.FLINK_MULTIPLE_JOB)
-						pairedQueue = null;
+						mergerThread = new MergerThread(srcFS, dstFS, paths, pairedQueue,
+								outputFile1, outputFile2, outputFiles, done, true, fileSize, blockSize, config, hadoopConfig);
 
-					mergerThread = new MergerThread(srcFS, dstFS, paths, pairedQueue,
-							outputFile1, outputFile2, outputFiles, done, true, fileSize, blockSize, config, hadoopConfig);
-
-					mergerThreads.put(algorithm.getOutputPath2().toString(), mergerThread);
+						mergerThreads.put(algorithm.getOutputPath2().toString(), mergerThread);
+					} else {
+						mergerThread.getPaths().add(new Path(algorithm.getOutputPath2().toString()));
+					}
 				}
 			}
 		}

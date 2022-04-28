@@ -276,8 +276,6 @@ public class FlinkDStream extends FlinkEC {
 		else
 			correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
 
-		putMergePath(algorithm.getOutputPath1());
-
 		try {
 			flinkExecEnv.execute();
 		} catch (Exception e) {
@@ -327,6 +325,8 @@ public class FlinkDStream extends FlinkEC {
 			readsDS.map(new CorrectSingle(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
 			.map(read -> read.f1).writeUsingOutputFormat(tof);
 		}
+
+		putMergePath(file);
 	}
 
 	private void correctPairedDataset(DataStream<Tuple3<LongWritable,Sequence,Sequence>> readsDS, CorrectionAlgorithm algorithm, Path kmersFile) {
@@ -346,5 +346,8 @@ public class FlinkDStream extends FlinkEC {
 
 		corrReadsDS.map(read -> read.f1).writeUsingOutputFormat(tof1);
 		corrReadsDS.map(read -> read.f2).writeUsingOutputFormat(tof2);
+
+		putMergePath(algorithm.getOutputPath1());
+		putMergePath(algorithm.getOutputPath2());
 	}
 }
