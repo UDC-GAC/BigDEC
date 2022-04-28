@@ -274,7 +274,7 @@ public class FlinkDStream extends FlinkEC {
 		if (!isPaired())
 			correctSingleDataset(readsDS, algorithm, algorithm.getOutputPath1(), getSolidKmersFile());
 		else
-			correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
+			correctPairedDatasetV2(pairedReadsDS, algorithm, getSolidKmersFile());
 
 		try {
 			flinkExecEnv.execute();
@@ -295,7 +295,7 @@ public class FlinkDStream extends FlinkEC {
 			if (!isPaired())
 				correctSingleDataset(readsDS, algorithm, algorithm.getOutputPath1(), getSolidKmersFile());
 			else
-				correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
+				correctPairedDatasetV2(pairedReadsDS, algorithm, getSolidKmersFile());
 		}
 
 		try {
@@ -330,6 +330,36 @@ public class FlinkDStream extends FlinkEC {
 	}
 
 	private void correctPairedDataset(DataStream<Tuple3<LongWritable,Sequence,Sequence>> readsDS, CorrectionAlgorithm algorithm, Path kmersFile) {
+		DataStream<Tuple2<LongWritable,Sequence>> leftReadsDS = 
+				readsDS.map(new MapFunction<Tuple3<LongWritable,Sequence,Sequence>, Tuple2<LongWritable,Sequence>>() {
+					private static final long serialVersionUID = -4768106122030307622L;
+					private Tuple2<LongWritable,Sequence> tuple2 = new Tuple2<LongWritable,Sequence>();
+
+					@Override
+					public Tuple2<LongWritable,Sequence> map(Tuple3<LongWritable,Sequence,Sequence> read) throws Exception {
+						tuple2.setFields(read.f0, read.f1);
+						return tuple2;
+					}
+				});
+
+		correctSingleDataset(leftReadsDS, algorithm, algorithm.getOutputPath1(), kmersFile);
+
+		DataStream<Tuple2<LongWritable,Sequence>> rightReadsDS = 
+				readsDS.map(new MapFunction<Tuple3<LongWritable,Sequence,Sequence>, Tuple2<LongWritable,Sequence>>() {
+					private static final long serialVersionUID = -4768106122030307622L;
+					private Tuple2<LongWritable,Sequence> tuple2 = new Tuple2<LongWritable,Sequence>();
+
+					@Override
+					public Tuple2<LongWritable,Sequence> map(Tuple3<LongWritable,Sequence,Sequence> read) throws Exception {
+						tuple2.setFields(read.f0, read.f1);
+						return tuple2;
+					}
+				});
+
+		correctSingleDataset(rightReadsDS, algorithm, algorithm.getOutputPath2(), kmersFile);
+	}
+
+	private void correctPairedDatasetV2(DataStream<Tuple3<LongWritable,Sequence,Sequence>> readsDS, CorrectionAlgorithm algorithm, Path kmersFile) {
 		TextOuputFormat<Sequence> tof1 = new TextOuputFormat<Sequence>(algorithm.getOutputPath1().toString(), getConfig().HDFS_BLOCK_REPLICATION);
 		TextOuputFormat<Sequence> tof2 = new TextOuputFormat<Sequence>(algorithm.getOutputPath2().toString(), getConfig().HDFS_BLOCK_REPLICATION);
 		DataStream<Tuple3<LongWritable,Sequence,Sequence>> corrReadsDS;

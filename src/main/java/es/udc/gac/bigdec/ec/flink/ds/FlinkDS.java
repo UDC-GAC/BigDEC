@@ -39,6 +39,7 @@ import org.apache.hadoop.mapreduce.Job;
 
 import es.udc.gac.bigdec.ec.CorrectionAlgorithm;
 import es.udc.gac.bigdec.ec.ErrorCorrection;
+import es.udc.gac.bigdec.ec.flink.CorrectPaired;
 import es.udc.gac.bigdec.ec.flink.CorrectSingle;
 import es.udc.gac.bigdec.ec.flink.FlinkEC;
 import es.udc.gac.bigdec.ec.flink.HadoopFileInputFormat;
@@ -248,7 +249,7 @@ public class FlinkDS extends FlinkEC {
 		if (!isPaired())
 			correctSingleDataset(readsDS, algorithm, algorithm.getOutputPath1(), getSolidKmersFile());
 		else
-			correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
+			correctPairedDatasetV2(pairedReadsDS, algorithm, getSolidKmersFile());
 
 		try {
 			flinkExecEnv.execute();
@@ -269,7 +270,7 @@ public class FlinkDS extends FlinkEC {
 			if (!isPaired())
 				correctSingleDataset(readsDS, algorithm, algorithm.getOutputPath1(), getSolidKmersFile());
 			else
-				correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
+				correctPairedDatasetV2(pairedReadsDS, algorithm, getSolidKmersFile());
 		}
 
 		try {
@@ -312,7 +313,7 @@ public class FlinkDS extends FlinkEC {
 	}
 
 	private void correctPairedDataset(DataSet<Tuple3<LongWritable,Sequence,Sequence>> readsDS, CorrectionAlgorithm algorithm, Path kmersFile) {
-		DataSet<Tuple2<LongWritable,Sequence>>leftReadsDS = 
+		DataSet<Tuple2<LongWritable,Sequence>> leftReadsDS = 
 				readsDS.map(new MapFunction<Tuple3<LongWritable,Sequence,Sequence>, Tuple2<LongWritable,Sequence>>() {
 					private static final long serialVersionUID = -4768106122030307622L;
 					private Tuple2<LongWritable,Sequence> tuple2 = new Tuple2<LongWritable,Sequence>();
@@ -339,5 +340,34 @@ public class FlinkDS extends FlinkEC {
 				});
 
 		correctSingleDataset(rightReadsDS, algorithm, algorithm.getOutputPath2(), kmersFile);
+	}
+
+	private void correctPairedDatasetV2(DataSet<Tuple3<LongWritable,Sequence,Sequence>> readsDS, CorrectionAlgorithm algorithm, Path kmersFile) {
+		TextOuputFormat<Sequence> tof1 = new TextOuputFormat<Sequence>(algorithm.getOutputPath1().toString(), getConfig().HDFS_BLOCK_REPLICATION);
+		TextOuputFormat<Sequence> tof2 = new TextOuputFormat<Sequence>(algorithm.getOutputPath2().toString(), getConfig().HDFS_BLOCK_REPLICATION);
+		DataSet<Tuple3<LongWritable,Sequence,Sequence>> corrReadsDS;
+
+		// Correct and write reads
+		if (getConfig().KEEP_ORDER) {
+			getLogger().info("Range-Partitioner and sortPartition");
+
+			corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
+					.partitionCustom(partitioner, 0).sortPartition(0, Order.ASCENDING);
+		} else {
+			if (getCLIOptions().runMergerThread()) {
+				getLogger().info("Range-Partitioner");
+
+				corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER))
+						.partitionCustom(partitioner, 0);
+			} else {
+				corrReadsDS = pairedReadsDS.map(new CorrectPaired(algorithm, true, kmersFile.toString(), KMER_MAX_COUNTER));
+			}
+		}
+
+		corrReadsDS.map(read -> read.f1).withForwardedFields("f1.*->*").output(tof1);
+		corrReadsDS.map(read -> read.f2).withForwardedFields("f2.*->*").output(tof2);
+
+		putMergePath(algorithm.getOutputPath1());
+		putMergePath(algorithm.getOutputPath2());
 	}
 }
