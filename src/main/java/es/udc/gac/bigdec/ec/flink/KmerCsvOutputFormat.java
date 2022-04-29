@@ -183,11 +183,7 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 
 	@Override
 	public String toString() {
-		return "CsvOF (path: "
-				+ getOutputFilePath()
-				+ ", delimiter: "
-				+ DEFAULT_LINE_DELIMITER
-				+ ")";
+		return "KmerCsvOF (" + getOutputFilePath() + ")";
 	}
 
 	@Override
