@@ -748,6 +748,7 @@ public abstract class ErrorCorrection {
 
 				if (isPaired()) {
 					if (RunEC.EXECUTION_ENGINE == ExecutionEngine.SPARK_MODE || config.FLINK_PAIRED_MERGE) {
+						srcFS = FileSystem.newInstance(hadoopConfig);
 						paths = new ArrayList<Path>();
 						paths.add(new Path(algorithm.getOutputPath2().toString()));
 						BlockingQueue<Path> pairedQueue = new ArrayBlockingQueue<Path>(1);
