@@ -19,6 +19,7 @@
 package es.udc.gac.bigdec.ec.flink;
 
 import org.apache.flink.api.common.io.FileOutputFormat;
+import org.apache.flink.core.fs.FSDataOutputStream;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.core.fs.SafetyNetWrapperFileSystem;
@@ -176,6 +177,22 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 	}
 
 	@Override
+	public void close() throws IOException {
+		final FSDataOutputStream s = this.stream;
+		if (s != null) {
+			this.stream = null;
+
+			try {
+				s.close();
+			} catch (IOException e) {
+				logger.warn("Could not properly close TextOuputFormat", e);
+				logger.warn("Retrying");
+				s.close();
+			}
+		}
+	}
+
+	@Override
 	public void tryCleanupOnError() {
 		if (this.fileCreated) {
 			this.fileCreated = false;
@@ -183,7 +200,7 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 			try {
 				close();
 			} catch (IOException e) {
-				logger.error("Could not properly close TextOuputFormat", e);
+				logger.warn("Could not properly close TextOuputFormat", e);
 			}
 
 			try {
@@ -191,7 +208,7 @@ public class TextOuputFormat<T> extends FileOutputFormat<T> {
 			} catch (FileNotFoundException e) {
 				// ignore, may not be visible yet or may be already removed
 			} catch (Throwable t) {
-				logger.error("Could not remove the incomplete file " + actualFilePath, t);
+				logger.warn("Could not remove the incomplete file " + actualFilePath, t);
 			}
 		}
 	}

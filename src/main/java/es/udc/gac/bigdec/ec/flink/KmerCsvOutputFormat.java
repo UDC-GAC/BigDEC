@@ -174,15 +174,6 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 	}
 
 	@Override
-	public void close() throws IOException {
-		if (wrt != null) {
-			this.wrt.flush();
-			this.wrt.close();
-		}
-		super.close();
-	}
-
-	@Override
 	public void writeRecord(Tuple2<Kmer,Integer> kmer) throws IOException {
 		this.wrt.write(kmer.f0.toString());
 		this.wrt.write(DEFAULT_FIELD_DELIMITER);
@@ -200,6 +191,23 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 	}
 
 	@Override
+	public void close() throws IOException {
+		if (wrt != null) {
+			this.wrt.flush();
+			this.wrt.close();
+			this.wrt = null;
+		}
+
+		try {
+			super.close();
+		} catch (IOException e) {
+			logger.warn("Could not properly close KmerCsvOutputFormat", e);
+			logger.warn("Retrying");
+			super.close();
+		}
+	}
+
+	@Override
 	public void tryCleanupOnError() {
 		if (this.fileCreated) {
 			this.fileCreated = false;
@@ -207,7 +215,7 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 			try {
 				close();
 			} catch (IOException e) {
-				logger.error("Could not properly close KmerCsvOutputFormat", e);
+				logger.warn("Could not properly close KmerCsvOutputFormat", e);
 			}
 
 			try {
@@ -215,7 +223,7 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 			} catch (FileNotFoundException e) {
 				// ignore, may not be visible yet or may be already removed
 			} catch (Throwable t) {
-				logger.error("Could not remove the incomplete file " + actualFilePath, t);
+				logger.warn("Could not remove the incomplete file " + actualFilePath, t);
 			}
 		}
 	}
