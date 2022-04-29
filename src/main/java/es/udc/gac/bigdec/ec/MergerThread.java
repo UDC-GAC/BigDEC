@@ -48,8 +48,8 @@ public class MergerThread extends Thread {
 
 	private static final Logger logger = LoggerFactory.getLogger(MergerThread.class);
 	private static final int SLEEP_LS = 2000;
-	private static final int SLEEP_EXISTS = 2000;
-	private static final int SLEEP_EOF = 2000;
+	private static final int SLEEP_EXISTS = 500;
+	private static final int SLEEP_EOF = 1500;
 	private static final double SLEEP_RATIO = 0.25; //25%
 	private static final int SLEEP_STE = 3000;
 	private static final int MAX_RETRIES = 3;
@@ -70,6 +70,7 @@ public class MergerThread extends Thread {
 	private boolean asynchronous;
 	private int increaseSleep;
 	private long sleepsLS;
+	private long sleepsFNFE;
 	private long sleepsEOF;
 	private long sleepsSTE;
 
@@ -95,6 +96,7 @@ public class MergerThread extends Thread {
 		this.sleepsLS = 0;
 		this.sleepsEOF = 0;
 		this.sleepsSTE = 0;
+		this.sleepsFNFE = 0;
 	}
 
 	public void terminate() {
@@ -143,11 +145,6 @@ public class MergerThread extends Thread {
 					}
 				}
 
-				if (config.HDFS_DELETE_TEMP_FILES) {
-					for(Path path: inputPaths)
-						srcFS.delete(path, true);
-				}
-
 				break;
 			} catch (InterruptedException ie) {
 				running.set(false);
@@ -159,7 +156,7 @@ public class MergerThread extends Thread {
 		}
 
 		running.set(false);
-		logger.info("MergerThread finished (sleeps: ls {}, eof {}, ste {})", sleepsLS, sleepsEOF, sleepsSTE);
+		logger.info("MergerThread finished (sleeps: ls {}, eof {}, fnfe {}, ste {})", sleepsLS, sleepsEOF, sleepsFNFE, sleepsSTE);
 	}
 
 	private void synchronousMerge() throws IOException, InterruptedException {
@@ -372,8 +369,10 @@ public class MergerThread extends Thread {
 
 			// Copy files
 			for (Path path: filesToProcess) {
-				while (!srcFS.exists(path))
+				while (!srcFS.exists(path)) {
 					Thread.sleep(SLEEP_EXISTS);
+					sleepsFNFE++;
+				}
 
 				fullyCopyFile(path, out, fileSize);
 			}
@@ -431,7 +430,8 @@ public class MergerThread extends Thread {
 			}
 		}
 
-		logger.info("EOF {} ({} bytes)", inputFile, totalBytes);
+		if (totalBytes < fileSize)
+			logger.info("EOF {} ({} bytes)", inputFile, totalBytes);
 
 		// EOF
 		while (totalBytes < fileSize) {

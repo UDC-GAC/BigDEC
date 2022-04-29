@@ -63,7 +63,7 @@ public abstract class ErrorCorrection {
 	private static final String MERGE_SOLID_KMERS_TIME = "MRGE_SOLID_KMERS_TIME";
 	private static final String LOAD_SOLID_KMERS_TIME = "LOAD_SOLID_KMERS_TIME";
 	private static final String ERROR_CORRECTION_TIME = "ERROR_CORRECTION_TIME";
-	private static final String DESTROY_DATASETS_TIME = "DESTROY_DATASETS_TIME";
+	private static final String CLEANUP_TIME = "CLEANUP_TIME";
 	private static final String MERGER_THREAD_TIME = "MERGER_THREAD_TIME";
 
 	private Configuration config;
@@ -552,6 +552,14 @@ public abstract class ErrorCorrection {
 						fs.delete(kmersPath, true);
 				}
 			}
+
+			long fileSize = fs.getFileStatus(getSolidKmersFile()).getLen();
+			double fileSizeMB = IOUtils.ByteToMiB(fileSize);
+
+			if (fileSizeMB > 1)
+				IOUtils.info("solid k-mers file size: "+IOUtils.formatOneDecimal(fileSizeMB)+" MiBytes");
+			else
+				IOUtils.info("solid k-mers file size: "+fileSize+" bytes");
 		} catch (IOException e) {
 			IOUtils.error(e.getMessage());
 		}
@@ -630,15 +638,23 @@ public abstract class ErrorCorrection {
 					timer.stop(MERGER_THREAD_TIME);
 				}
 			}
+
+			timer.start(CLEANUP_TIME);
+			if (config.HDFS_DELETE_TEMP_FILES) {
+				for (Path out: outputPaths) {
+					fs.delete(out, true);
+				}
+			}
+			timer.stop(CLEANUP_TIME);
 		}
 
 		/*
 		 * Free resources
 		 */
-		timer.start(DESTROY_DATASETS_TIME);
+		timer.start(CLEANUP_TIME);
 		removeSolidKmers();
 		destroyDatasets();
-		timer.stop(DESTROY_DATASETS_TIME);
+		timer.stop(CLEANUP_TIME);
 
 		return outputPaths;
 	}
@@ -654,7 +670,7 @@ public abstract class ErrorCorrection {
 				timer.getTotalTime(LOAD_SOLID_KMERS_TIME) +
 				timer.getTotalTime(ERROR_CORRECTION_TIME) +
 				timer.getTotalTime(MERGER_THREAD_TIME) +
-				timer.getTotalTime(DESTROY_DATASETS_TIME);
+				timer.getTotalTime(CLEANUP_TIME);
 
 		IOUtils.info("########### EC TIMES #############");
 		IOUtils.info("total: "+IOUtils.formatTwoDecimal(total)+" seconds");
@@ -678,8 +694,8 @@ public abstract class ErrorCorrection {
 				IOUtils.info("    "+alg.getClass().getSimpleName()+" = " +IOUtils.formatTwoDecimal(timer.getTotalTime(alg.getClass().getName()))+" seconds");
 		}
 
-		if (timer.getTotalTime(DESTROY_DATASETS_TIME) != 0)
-			IOUtils.info(" -datasets destruction = " +IOUtils.formatTwoDecimal(timer.getTotalTime(DESTROY_DATASETS_TIME))+" seconds");
+		if (timer.getTotalTime(CLEANUP_TIME) != 0)
+			IOUtils.info(" -cleanup = " +IOUtils.formatTwoDecimal(timer.getTotalTime(CLEANUP_TIME))+" seconds");
 		if (options.runMergerThread() && timer.getTotalTime(MERGER_THREAD_TIME) != 0)
 			IOUtils.info(" -merger thread = " +IOUtils.formatTwoDecimal(timer.getTotalTime(MERGER_THREAD_TIME))+" seconds");
 		IOUtils.info("##################################");
