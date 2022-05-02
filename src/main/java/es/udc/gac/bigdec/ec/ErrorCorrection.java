@@ -259,12 +259,10 @@ public abstract class ErrorCorrection {
 			try {
 				MergerThread thread = mergerThreads.get(path.toString());
 
-				if (thread != null) {
-					thread.putPath(path);
-				} else {
-					if (RunEC.EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE && config.FLINK_PAIRED_MERGE)
-						logger.warn("MergerThread for {} does not exist", path.toString());
-				}
+				if (thread == null)
+					logger.error("MergerThread for {} does not exist", path.toString());
+
+				thread.putPath(path);
 			} catch (InterruptedException e) {
 				IOUtils.error(e.getMessage());
 			}
@@ -742,13 +740,14 @@ public abstract class ErrorCorrection {
 		if (!config.MULTITHREAD_MERGE) {
 			FileSystem srcFS = FileSystem.newInstance(hadoopConfig);
 
-			MergerThread mergerThread = new MergerThread(srcFS, dstFS, outputPaths, null,
+			MergerThread mergerThread = new MergerThread(srcFS, dstFS, outputPaths, false, null,
 					outputFile1, outputFile2, outputFiles, done, true, fileSize, blockSize, config, hadoopConfig);
 
 			mergerThreads.put("ALL", mergerThread);
 		} else {
 			MergerThread mergerThread;
 			List<Path> paths;
+			boolean reverse;
 			FileSystem srcFS;
 
 			for (CorrectionAlgorithm algorithm: correctionAlgorithms) {
@@ -756,26 +755,24 @@ public abstract class ErrorCorrection {
 				paths = new ArrayList<Path>();
 				paths.add(new Path(algorithm.getOutputPath1().toString()));
 				BlockingQueue<Path> queue = new ArrayBlockingQueue<Path>(1);
+				reverse = false;
 
-				mergerThread = new MergerThread(srcFS, dstFS, paths, queue,
+				mergerThread = new MergerThread(srcFS, dstFS, paths, reverse, queue,
 						outputFile1, outputFile2, outputFiles, done, true, fileSize, blockSize, config, hadoopConfig);
 
 				mergerThreads.put(algorithm.getOutputPath1().toString(), mergerThread);
 
 				if (isPaired()) {
-					if (RunEC.EXECUTION_ENGINE == ExecutionEngine.SPARK_MODE || config.FLINK_PAIRED_MERGE) {
-						srcFS = FileSystem.newInstance(hadoopConfig);
-						paths = new ArrayList<Path>();
-						paths.add(new Path(algorithm.getOutputPath2().toString()));
-						BlockingQueue<Path> pairedQueue = new ArrayBlockingQueue<Path>(1);
+					srcFS = FileSystem.newInstance(hadoopConfig);
+					paths = new ArrayList<Path>();
+					paths.add(new Path(algorithm.getOutputPath2().toString()));
+					BlockingQueue<Path> pairedQueue = new ArrayBlockingQueue<Path>(1);
+					reverse = true;
 
-						mergerThread = new MergerThread(srcFS, dstFS, paths, pairedQueue,
-								outputFile1, outputFile2, outputFiles, done, true, fileSize, blockSize, config, hadoopConfig);
+					mergerThread = new MergerThread(srcFS, dstFS, paths, reverse, pairedQueue,
+							outputFile1, outputFile2, outputFiles, done, true, fileSize, blockSize, config, hadoopConfig);
 
-						mergerThreads.put(algorithm.getOutputPath2().toString(), mergerThread);
-					} else {
-						mergerThread.getPaths().add(new Path(algorithm.getOutputPath2().toString()));
-					}
+					mergerThreads.put(algorithm.getOutputPath2().toString(), mergerThread);
 				}
 			}
 		}

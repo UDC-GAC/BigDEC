@@ -72,7 +72,8 @@ public class FlinkDStream extends FlinkEC {
 	private DataStream<Tuple2<LongWritable,Sequence>> readsDS;
 	private DataStream<Tuple3<LongWritable,Sequence,Sequence>> pairedReadsDS;
 	private DataStream<Tuple2<Kmer,Integer>> kmersDS;
-	private RangePartitioner partitioner;
+	private RangePartitioner forward_partitioner;
+	private RangePartitioner reverse_partitioner;
 
 	public FlinkDStream(Configuration config, CLIOptions options) {
 		super(config, options);
@@ -99,7 +100,7 @@ public class FlinkDStream extends FlinkEC {
 
 	@Override
 	public long getEstimatedPartitionSize() {
-		return partitioner.getPartitionSize();
+		return forward_partitioner.getPartitionSize();
 	}
 
 	@Override
@@ -110,10 +111,11 @@ public class FlinkDStream extends FlinkEC {
 		long inputPath1Length = getFileSystem().getFileStatus(getInputFile1()).getLen();
 
 		// Create Range partitioner
-		partitioner = new RangePartitioner(inputPath1Length, getParallelism());
+		forward_partitioner = new RangePartitioner(inputPath1Length, getParallelism(), false);
+		reverse_partitioner = new RangePartitioner(inputPath1Length, getParallelism(), true);
 
 		getLogger().info("Partitioning info: inputSize {}, partitions {}, partitionSize {}", inputPath1Length,
-				getParallelism(), partitioner.getPartitionSize());
+				getParallelism(), forward_partitioner.getPartitionSize());
 
 		if (!isPaired()) {
 			SingleEndSequenceInputFormat inputFormat = IOUtils.getInputFormatInstance(getInputFormatClass());
@@ -271,7 +273,7 @@ public class FlinkDStream extends FlinkEC {
 	@Override
 	protected void runErrorCorrection(CorrectionAlgorithm algorithm) {
 		if (!isPaired())
-			correctSingleDataset(readsDS, algorithm, algorithm.getOutputPath1(), getSolidKmersFile());
+			correctSingleDataset(readsDS, algorithm, algorithm.getOutputPath1(), getSolidKmersFile(), forward_partitioner);
 		else
 			correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
 
@@ -292,7 +294,7 @@ public class FlinkDStream extends FlinkEC {
 			algorithm.printConfig();
 
 			if (!isPaired())
-				correctSingleDataset(readsDS, algorithm, algorithm.getOutputPath1(), getSolidKmersFile());
+				correctSingleDataset(readsDS, algorithm, algorithm.getOutputPath1(), getSolidKmersFile(), forward_partitioner);
 			else
 				correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
 		}
@@ -310,7 +312,8 @@ public class FlinkDStream extends FlinkEC {
 		pairedReadsDS = null;
 	}
 
-	private void correctSingleDataset(DataStream<Tuple2<LongWritable,Sequence>> readsDS, CorrectionAlgorithm algorithm, Path file, Path kmersFile) {
+	private void correctSingleDataset(DataStream<Tuple2<LongWritable,Sequence>> reads, CorrectionAlgorithm algorithm, 
+			Path file, Path kmersFile, RangePartitioner partitioner) {
 		TextOuputFormat<Sequence> tof = new TextOuputFormat<Sequence>(file.toString(), getConfig().HDFS_BLOCK_REPLICATION);
 
 		// Correct and write reads
@@ -341,7 +344,7 @@ public class FlinkDStream extends FlinkEC {
 					}
 				});
 
-		correctSingleDataset(leftReadsDS, algorithm, algorithm.getOutputPath1(), kmersFile);
+		correctSingleDataset(leftReadsDS, algorithm, algorithm.getOutputPath1(), kmersFile, forward_partitioner);
 
 		DataStream<Tuple2<LongWritable,Sequence>> rightReadsDS = 
 				readsDS.map(new MapFunction<Tuple3<LongWritable,Sequence,Sequence>, Tuple2<LongWritable,Sequence>>() {
@@ -355,6 +358,6 @@ public class FlinkDStream extends FlinkEC {
 					}
 				});
 
-		correctSingleDataset(rightReadsDS, algorithm, algorithm.getOutputPath2(), kmersFile);
+		correctSingleDataset(rightReadsDS, algorithm, algorithm.getOutputPath2(), kmersFile, reverse_partitioner);
 	}
 }

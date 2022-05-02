@@ -56,8 +56,9 @@ public class MergerThread extends Thread {
 
 	private Configuration config;
 	private List<Path> inputPaths;
+	private boolean reverse;
 	private BlockingQueue<Path> inputPathsQueue;
-	private long outputFiles;
+	private int outputFiles;
 	private AtomicBoolean running;
 	private byte buffer[];
 	private FileSystem srcFS;
@@ -74,17 +75,18 @@ public class MergerThread extends Thread {
 	private long sleepsEOF;
 	private long sleepsSTE;
 
-	public MergerThread(FileSystem srcFS, FileSystem dstFS, List<Path> inputPaths, BlockingQueue<Path> inputPathsQueue,
-			Path outputFile1, Path outputFile2, long outputFiles, Path done, boolean asynchronous, long fileSize,
-			long blockSize, Configuration config, org.apache.hadoop.conf.Configuration hadoopConfig) {
+	public MergerThread(FileSystem srcFS, FileSystem dstFS, List<Path> inputPaths, boolean reverse, 
+			BlockingQueue<Path> inputPathsQueue, Path outputFile1, Path outputFile2, long outputFiles, Path done,
+			boolean asynchronous, long fileSize, long blockSize, Configuration config, org.apache.hadoop.conf.Configuration hadoopConfig) {
 		this.config = config;
 		this.srcFS = srcFS;
 		this.dstFS = dstFS;
 		this.outputFile1 = outputFile1;
 		this.outputFile2 = outputFile2;
 		this.inputPaths = inputPaths;
+		this.reverse = reverse;
 		this.inputPathsQueue = inputPathsQueue;
-		this.outputFiles = outputFiles;
+		this.outputFiles = (int) outputFiles;
 		int bufferSize = hadoopConfig.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, RunMerge.BUFFER_SIZE_DEFAULT);
 		this.buffer = new byte[bufferSize];
 		this.blockSize = blockSize;
@@ -118,7 +120,7 @@ public class MergerThread extends Thread {
 	public void run() {
 		running.set(true);
 
-		logger.info("bufferSize {}, blockSize {}, replication factor {}", buffer.length, blockSize, config.HDFS_BLOCK_REPLICATION);
+		logger.info("reverse {}, bufferSize {}, blockSize {}, replication factor {}", reverse, buffer.length, blockSize, config.HDFS_BLOCK_REPLICATION);
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Paths to merge");
@@ -129,19 +131,16 @@ public class MergerThread extends Thread {
 
 		while (running.get()) {
 			try {
-				if (RunEC.EXECUTION_ENGINE == RunEC.ExecutionEngine.FLINK_MODE) {
-					if (asynchronous)
-						asynchronousMerge(1);
-					else
-						synchronousMerge();
+				if (!asynchronous) {
+					synchronousMerge();
 				} else {
-					if (asynchronous) {
-						if (config.SPARK_API.equalsIgnoreCase("RDD"))
-							asynchronousMerge("part-", null, 0);
-						else
-							asynchronousMerge("part-", "[-]\\S*", 0);
+					if (RunEC.EXECUTION_ENGINE == RunEC.ExecutionEngine.FLINK_MODE) {
+						flinkMerge(1);
 					} else {
-						synchronousMerge();
+						if (config.SPARK_API.equalsIgnoreCase("RDD"))
+							sparkMerge("part-", null, 0);
+						else
+							sparkMerge("part-", "[-]\\S*", 0);
 					}
 				}
 
@@ -206,7 +205,7 @@ public class MergerThread extends Thread {
 		}
 	}
 
-	private void asynchronousMerge(String prefix, String suffix, int firstFileNumber) throws IOException, InterruptedException {
+	private void sparkMerge(String prefix, String suffix, int firstFileNumber) throws IOException, InterruptedException {
 		Path outputFile;
 		int processedFiles, i;
 		List<MutablePair<Path,Integer>> filesToProcess = new ArrayList<MutablePair<Path,Integer>>();
@@ -334,7 +333,7 @@ public class MergerThread extends Thread {
 		}
 	}
 
-	private void asynchronousMerge(int firstFileNumber) throws IOException, InterruptedException {
+	private void flinkMerge(int firstFileNumber) throws IOException, InterruptedException {
 		Path outputFile;
 		List<Path> filesToProcess = new ArrayList<Path>();
 		FSDataOutputStream out;
@@ -359,13 +358,18 @@ public class MergerThread extends Thread {
 			// Create output file
 			out = dstFS.create(outputFile, true, buffer.length, config.HDFS_BLOCK_REPLICATION, blockSize);
 
-			logger.info("Merging from {} to {}", inputPath, outputFile);
-
 			filesToProcess.clear();
 
 			// Create input paths
-			for (int i = firstFileNumber; i <= outputFiles; i++)
-				filesToProcess.add(new Path(inputPath+Configuration.SLASH+i));
+			if (!reverse) {
+				for (int i = firstFileNumber; i <= outputFiles; i++)
+					filesToProcess.add(new Path(inputPath+Configuration.SLASH+i));
+			} else {
+				for (int i = outputFiles; i >= firstFileNumber; i--)
+					filesToProcess.add(new Path(inputPath+Configuration.SLASH+i));				
+			}
+
+			logger.info("Merging {} files from {} to {}", filesToProcess.size(), inputPath, outputFile);
 
 			// Copy files
 			for (Path path: filesToProcess) {
