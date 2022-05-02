@@ -146,6 +146,7 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 						p.suffix("/" + getDirectoryFileName(taskNumber)) : p;
 
 		this.stream = null;
+		logger.info("TaskNumber {} creating output file: {}", taskNumber, this.actualFilePath);
 
 		// create output file
 		if (fs.isDistributedFS() && fs instanceof SafetyNetWrapperFileSystem) {
@@ -156,7 +157,7 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 				org.apache.hadoop.conf.Configuration hadoopConfig = dFS.getHadoopFileSystem().getConf();
 				long blockSize = hadoopConfig.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT);
 				int bufferSize = hadoopConfig.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT);
-				logger.info("HDFS detected: bufferSize {}, blockSize {}, replication {}", bufferSize, blockSize, replication);
+				logger.info("HDFS options: bufferSize {}, blockSize {}, replication {}", bufferSize, blockSize, replication);
 
 				this.stream = dFS.create(this.actualFilePath, true,	bufferSize, replication, blockSize);
 			}
