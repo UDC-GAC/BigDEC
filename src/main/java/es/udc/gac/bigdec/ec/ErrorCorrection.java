@@ -767,7 +767,6 @@ public abstract class ErrorCorrection {
 					paths = new ArrayList<Path>();
 					paths.add(new Path(algorithm.getOutputPath2().toString()));
 					BlockingQueue<Path> pairedQueue = new ArrayBlockingQueue<Path>(1);
-					reverse = true;
 
 					mergerThread = new MergerThread(srcFS, dstFS, paths, reverse, pairedQueue,
 							outputFile1, outputFile2, outputFiles, done, true, fileSize, blockSize, config, hadoopConfig);
