@@ -25,6 +25,7 @@ import java.util.TreeMap;
 
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
@@ -245,10 +246,14 @@ public class FlinkDS extends FlinkEC {
 
 	@Override
 	protected void runErrorCorrection(CorrectionAlgorithm algorithm) {
-		if (!isPaired())
+		if (!isPaired()) {
 			correctSingleDataset(readsDS, algorithm, algorithm.getOutputPath1(), getSolidKmersFile());
-		else
-			correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
+		} else {
+			if (getConfig().FLINK_PAIRED_MODE)
+				correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
+			else
+				correctPairedDatasetAsSingle(pairedReadsDS, algorithm, getSolidKmersFile());
+		}
 
 		try {
 			flinkExecEnv.execute();
@@ -266,10 +271,14 @@ public class FlinkDS extends FlinkEC {
 			IOUtils.info("executing algorithm "+algorithm.toString());
 			algorithm.printConfig();
 
-			if (!isPaired())
+			if (!isPaired()) {
 				correctSingleDataset(readsDS, algorithm, algorithm.getOutputPath1(), getSolidKmersFile());
-			else
-				correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
+			} else {
+				if (getConfig().FLINK_PAIRED_MODE)
+					correctPairedDataset(pairedReadsDS, algorithm, getSolidKmersFile());
+				else
+					correctPairedDatasetAsSingle(pairedReadsDS, algorithm, getSolidKmersFile());
+			}
 		}
 
 		try {
@@ -338,5 +347,35 @@ public class FlinkDS extends FlinkEC {
 
 		putMergePath(algorithm.getOutputPath1());
 		putMergePath(algorithm.getOutputPath2());
+	}
+
+	private void correctPairedDatasetAsSingle(DataSet<Tuple3<LongWritable,Sequence,Sequence>> readsDS, CorrectionAlgorithm algorithm, Path kmersFile) {
+		DataSet<Tuple2<LongWritable,Sequence>> leftReadsDS = 
+				readsDS.map(new MapFunction<Tuple3<LongWritable,Sequence,Sequence>, Tuple2<LongWritable,Sequence>>() {
+					private static final long serialVersionUID = -4768106122030307622L;
+					private Tuple2<LongWritable,Sequence> tuple2 = new Tuple2<LongWritable,Sequence>();
+
+					@Override
+					public Tuple2<LongWritable,Sequence> map(Tuple3<LongWritable,Sequence,Sequence> read) throws Exception {
+						tuple2.setFields(read.f0, read.f1);
+						return tuple2;
+					}
+				});
+
+		correctSingleDataset(leftReadsDS, algorithm, algorithm.getOutputPath1(), kmersFile);
+
+		DataSet<Tuple2<LongWritable,Sequence>> rightReadsDS = 
+				readsDS.map(new MapFunction<Tuple3<LongWritable,Sequence,Sequence>, Tuple2<LongWritable,Sequence>>() {
+					private static final long serialVersionUID = -6132912354972025193L;
+					private Tuple2<LongWritable,Sequence> tuple2 = new Tuple2<LongWritable,Sequence>();
+
+					@Override
+					public Tuple2<LongWritable,Sequence> map(Tuple3<LongWritable,Sequence,Sequence> read) throws Exception {
+						tuple2.setFields(read.f0, read.f2);
+						return tuple2;
+					}
+				});
+
+		correctSingleDataset(rightReadsDS, algorithm, algorithm.getOutputPath2(), kmersFile);
 	}
 }

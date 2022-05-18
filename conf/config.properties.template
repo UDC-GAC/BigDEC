@@ -61,6 +61,9 @@ FLINK_MULTIPLE_JOB=true
 # Write non-unique k-mers to HDFS
 FLINK_WRITE_KMERS=false
 
+# Correct paired-end datasets using single-end mode when set to false
+FLINK_PAIRED_MODE=true
+
 # Enable the pre-shuffle aggregate operator. Only significant for Datastream API
 FLINK_PRE_SHUFFLE_AGGREGATOR=true
 
