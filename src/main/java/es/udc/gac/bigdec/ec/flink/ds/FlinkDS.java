@@ -297,6 +297,8 @@ public class FlinkDS extends FlinkEC {
 	private void correctSingleDataset(DataSet<Tuple2<LongWritable,Sequence>> reads, CorrectionAlgorithm algorithm, Path file, Path kmersFile) {
 		TextOuputFormat<Sequence> tof = new TextOuputFormat<Sequence>(file.toString(), getConfig().HDFS_BLOCK_REPLICATION);
 
+		getLogger().info("Correcting single-end dataset to {}", file);
+
 		// Correct and write reads
 		if (getConfig().KEEP_ORDER) {
 			getLogger().info("Range-Partitioner and sortPartition");

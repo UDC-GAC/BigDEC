@@ -322,6 +322,8 @@ public class FlinkDStream extends FlinkEC {
 	private void correctSingleDataset(DataStream<Tuple2<LongWritable,Sequence>> reads, CorrectionAlgorithm algorithm, Path file, Path kmersFile) {
 		TextOuputFormat<Sequence> tof = new TextOuputFormat<Sequence>(file.toString(), getConfig().HDFS_BLOCK_REPLICATION);
 
+		getLogger().info("Correcting single-end dataset to {}", file);
+
 		// Correct and write reads
 		if (getCLIOptions().runMergerThread()) {
 			getLogger().info("Range-Partitioner");
