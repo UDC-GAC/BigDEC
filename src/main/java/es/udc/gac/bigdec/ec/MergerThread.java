@@ -120,7 +120,7 @@ public class MergerThread extends Thread {
 	public void run() {
 		running.set(true);
 
-		logger.info("reverse {}, bufferSize {}, blockSize {}, replication factor {}", reverse, buffer.length, blockSize, config.HDFS_BLOCK_REPLICATION);
+		logger.info("bufferSize {}, blockSize {}, replication factor {}", buffer.length, blockSize, config.HDFS_BLOCK_REPLICATION);
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Paths to merge");
