@@ -26,24 +26,17 @@ public class RangePartitioner implements Partitioner<LongWritable> {
 	private static final long serialVersionUID = -401498768038251208L;
 
 	private long partitionSize;
-	private boolean reverse;
 
-	public RangePartitioner(long maxRange, int numPartitions, boolean reverse) {
+	public RangePartitioner(long maxRange, int numPartitions) {
 		this.partitionSize = (int) Math.ceil(((double) maxRange) / numPartitions);
-		this.reverse = reverse;
 	}
 
 	public long getPartitionSize() {
 		return partitionSize;
 	}
 
-	public boolean isReverse() {
-		return reverse;
-	}
-
 	@Override
 	public int partition(LongWritable key, int numPartitions) {
-		int partition = (int) (key.get() / partitionSize);
-		return (reverse)? (numPartitions - 1) - partition : partition;
+		return (int) (key.get() / partitionSize);
 	}
 }

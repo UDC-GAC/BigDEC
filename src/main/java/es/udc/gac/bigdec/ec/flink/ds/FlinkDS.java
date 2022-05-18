@@ -105,7 +105,7 @@ public class FlinkDS extends FlinkEC {
 		long inputPath1Length = getFileSystem().getFileStatus(getInputFile1()).getLen();
 
 		// Create Range partitioner
-		partitioner = new RangePartitioner(inputPath1Length, getParallelism(), false);
+		partitioner = new RangePartitioner(inputPath1Length, getParallelism());
 
 		getLogger().info("Partitioning info: inputSize {}, partitions {}, partitionSize {}", inputPath1Length,
 				getParallelism(), partitioner.getPartitionSize());
