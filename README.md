@@ -125,7 +125,7 @@ This will recreate the *jar* file needed to run BigDEC. Note that the first time
 
 ## Authors
 
-BigDEC is developed in the [Computer Architecture Group](https://gac.udc.es/english) at the [Universidade da Coruña](https://www.udc.es/en) by:
+BigDEC is developed in the [Computer Architecture Group](https://gac.udc.es/?page_id=770&lang=en) at the [Universidade da Coruña](https://www.udc.es/en) by:
 
 * **Roberto R. Expósito** (https://gac.udc.es/~rober)
 * **Jorge González-Domínguez** (https://gac.udc.es/~jgonzalezd)
