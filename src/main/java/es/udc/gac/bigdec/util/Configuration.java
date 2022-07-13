@@ -353,8 +353,11 @@ public final class Configuration {
 		if (!SPARK_API.equalsIgnoreCase("RDD") && !SPARK_API.equalsIgnoreCase("Dataset"))
 			throw new RuntimeException("SPARK_API="+SPARK_API+" is invalid. Supported values: RDD and Dataset");
 
-		if (!SPARK_COMPRESSION_CODEC.equalsIgnoreCase("lz4") && !SPARK_COMPRESSION_CODEC.equalsIgnoreCase("snappy"))
-			throw new RuntimeException("SPARK_COMPRESSION_CODEC="+SPARK_COMPRESSION_CODEC+" is invalid. Supported values: lz4 and snappy");
+		if (!SPARK_COMPRESSION_CODEC.equalsIgnoreCase("lz4") &&
+				!SPARK_COMPRESSION_CODEC.equalsIgnoreCase("snappy") &&
+				!SPARK_COMPRESSION_CODEC.equalsIgnoreCase("lzf") &&
+				!SPARK_COMPRESSION_CODEC.equalsIgnoreCase("zstd"))
+			throw new RuntimeException("SPARK_COMPRESSION_CODEC="+SPARK_COMPRESSION_CODEC+" is invalid. Supported values: lz4, lzf, zstd, snappy");
 
 		if (SPARK_SHUFFLE_PARTITIONS <= 0) {
 			throw new RuntimeException("SPARK_SHUFFLE_PARTITIONS="+SPARK_SHUFFLE_PARTITIONS+" must be >= 1");
