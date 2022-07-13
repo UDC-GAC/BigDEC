@@ -97,7 +97,7 @@ To specify which algorithm(s) to use for correcting the input files, along with 
 
 As mentioned before, additional BigDEC settings can be set through the *config.properties* file located at the *conf* directory. The most relevant options that can be configured in this file are the following:
 
-* **ALGORITHMS (list)**. Comma-separated list of correction algorithms to be used. Supported values: MUSKET, BLESS2 and RECKONER. The default value is MUSKET.
+* **ALGORITHMS (list)**. Comma-separated list of correction algorithms to be used. Supported values: MUSKET, BLESS2, RECKONER, ALL. The last value can be used to specify all the algorithms currently supported. The default value is MUSKET.
 * **KMER_THRESHOLD (int)**. Minimum occurrences for solid k-mers. This value is automatically calculated when set to 0, which is the default value.
 * **KEEP_ORDER (boolean)**. Whether to force to keep output sequences in the same input order. The default value is true.
 * **MULTITHREAD_MERGE (boolean)**. Whether to launch multiple threads when merging output files to improve performance. This setting is only relevant when multiple correction algorithms are executed and/or when correcting paired-end datasets. The default value is true.

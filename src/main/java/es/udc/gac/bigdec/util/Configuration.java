@@ -163,7 +163,15 @@ public final class Configuration {
 		List<String> list = Arrays.asList(ALGORITHMS.split(","));
 
 		for(String algorithm: list) {
-			if (algorithm.equalsIgnoreCase("BLESS2"))
+			if (algorithm.equalsIgnoreCase("ALL")) {
+				correctionAlgorithms.clear();
+				correctionAlgorithms.add(new BLESS2(this, kmerLength, list.size()));
+				correctionAlgorithms.add(new RECKONER(this, kmerLength, list.size()));
+				correctionAlgorithms.add(new MUSKET(this, kmerLength, list.size()));
+				break;
+			}
+
+			if (algorithm.equalsIgnoreCase("BLESS2") || algorithm.equalsIgnoreCase("BLESS"))
 				correctionAlgorithms.add(new BLESS2(this, kmerLength, list.size()));
 			if (algorithm.equalsIgnoreCase("RECKONER"))
 				correctionAlgorithms.add(new RECKONER(this, kmerLength, list.size()));
@@ -249,8 +257,9 @@ public final class Configuration {
 			if (!algorithm.equalsIgnoreCase("BLESS2") &&
 					!algorithm.equalsIgnoreCase("BLESS") && 
 					!algorithm.equalsIgnoreCase("RECKONER") &&
-					!algorithm.equalsIgnoreCase("MUSKET"))
-				throw new RuntimeException("ALGORITHMS="+ALGORITHMS+" is not valid. Supported values: MUSKET, BLESS2 and RECKONER");
+					!algorithm.equalsIgnoreCase("MUSKET") &&
+					!algorithm.equalsIgnoreCase("ALL"))
+				throw new RuntimeException("ALGORITHMS="+ALGORITHMS+" is not valid. Supported values: MUSKET, BLESS2, RECKONER, ALL");
 		}
 
 		if (KMER_THRESHOLD != 0 && KMER_THRESHOLD < 2) {

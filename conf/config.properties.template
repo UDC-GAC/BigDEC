@@ -2,7 +2,7 @@
 # Global options
 ###################
 # Comma-separated list of correction algorithms
-# Supported values: MUSKET, BLESS2 and RECKONER
+# Supported values: MUSKET, BLESS2, RECKONER, ALL
 ALGORITHMS=MUSKET
 
 # Minimum occurrences for solid k-mers. This value is automatically
@@ -114,7 +114,7 @@ BLESS2_MAX_N_RATIO=0.1
 
 # Base used to replace 'Ns' (or other characters) during
 # the error correction phase
-# Possible values: A, C, G, T
+# Supported values: A, C, G, T
 BLESS2_SUBST_BASE=A
 
 # Advanced options
@@ -157,7 +157,7 @@ RECKONER_MAX_ERROR_RATIO=0.5
 
 # Base used to replace 'Ns' (or other characters) during
 # the error correction phase
-# Possible values: A, C, G, T
+# Supported values: A, C, G, T
 RECKONER_SUBST_BASE=A
 
 # Advanced options
