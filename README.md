@@ -11,7 +11,7 @@ This tool supports the processing of single-end and paired-end reads from FASTQ 
 * Make sure you have Java Runtime Environment (JRE) version 1.8 or above.
   * JAVA_HOME environmental variable must be set accordingly.
 
-* For Spark, make sure you have a working distribution version 2.2 or above.
+* For Spark, make sure you have a working distribution version 2.4 or above.
   * Note that the *spark-submit* command needs to be available in PATH.
   * See [Spark's Cluster Overview](https://spark.apache.org/docs/latest/cluster-overview.html).
 
