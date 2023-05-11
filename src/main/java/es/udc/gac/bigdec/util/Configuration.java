@@ -42,7 +42,7 @@ import es.udc.gac.bigdec.ec.reckoner.RECKONER;
 
 public final class Configuration {
 
-	public static final String VERSION = "v1.1";
+	public static final String VERSION = "v1.2";
 	public static final String WEBPAGE = "https://github.com/UDC-GAC/BigDEC";
 	public static final String BIGDEC_HOME;
 	public static final String SLASH;
@@ -163,7 +163,15 @@ public final class Configuration {
 		List<String> list = Arrays.asList(ALGORITHMS.split(","));
 
 		for(String algorithm: list) {
-			if (algorithm.equalsIgnoreCase("BLESS2"))
+			if (algorithm.equalsIgnoreCase("ALL")) {
+				correctionAlgorithms.clear();
+				correctionAlgorithms.add(new BLESS2(this, kmerLength, list.size()));
+				correctionAlgorithms.add(new RECKONER(this, kmerLength, list.size()));
+				correctionAlgorithms.add(new MUSKET(this, kmerLength, list.size()));
+				break;
+			}
+
+			if (algorithm.equalsIgnoreCase("BLESS2") || algorithm.equalsIgnoreCase("BLESS"))
 				correctionAlgorithms.add(new BLESS2(this, kmerLength, list.size()));
 			if (algorithm.equalsIgnoreCase("RECKONER"))
 				correctionAlgorithms.add(new RECKONER(this, kmerLength, list.size()));
@@ -249,8 +257,9 @@ public final class Configuration {
 			if (!algorithm.equalsIgnoreCase("BLESS2") &&
 					!algorithm.equalsIgnoreCase("BLESS") && 
 					!algorithm.equalsIgnoreCase("RECKONER") &&
-					!algorithm.equalsIgnoreCase("MUSKET"))
-				throw new RuntimeException("ALGORITHMS="+ALGORITHMS+" is not valid. Supported values: MUSKET, BLESS2 and RECKONER");
+					!algorithm.equalsIgnoreCase("MUSKET") &&
+					!algorithm.equalsIgnoreCase("ALL"))
+				throw new RuntimeException("ALGORITHMS="+ALGORITHMS+" is not valid. Supported values: MUSKET, BLESS2, RECKONER, ALL");
 		}
 
 		if (KMER_THRESHOLD != 0 && KMER_THRESHOLD < 2) {
@@ -344,8 +353,11 @@ public final class Configuration {
 		if (!SPARK_API.equalsIgnoreCase("RDD") && !SPARK_API.equalsIgnoreCase("Dataset"))
 			throw new RuntimeException("SPARK_API="+SPARK_API+" is invalid. Supported values: RDD and Dataset");
 
-		if (!SPARK_COMPRESSION_CODEC.equalsIgnoreCase("lz4") && !SPARK_COMPRESSION_CODEC.equalsIgnoreCase("snappy"))
-			throw new RuntimeException("SPARK_COMPRESSION_CODEC="+SPARK_COMPRESSION_CODEC+" is invalid. Supported values: lz4 and snappy");
+		if (!SPARK_COMPRESSION_CODEC.equalsIgnoreCase("lz4") &&
+				!SPARK_COMPRESSION_CODEC.equalsIgnoreCase("snappy") &&
+				!SPARK_COMPRESSION_CODEC.equalsIgnoreCase("lzf") &&
+				!SPARK_COMPRESSION_CODEC.equalsIgnoreCase("zstd"))
+			throw new RuntimeException("SPARK_COMPRESSION_CODEC="+SPARK_COMPRESSION_CODEC+" is invalid. Supported values: lz4, lzf, zstd, snappy");
 
 		if (SPARK_SHUFFLE_PARTITIONS <= 0) {
 			throw new RuntimeException("SPARK_SHUFFLE_PARTITIONS="+SPARK_SHUFFLE_PARTITIONS+" must be >= 1");

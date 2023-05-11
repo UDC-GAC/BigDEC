@@ -197,6 +197,7 @@ public final class IOUtils {
 		else
 			basePath = new Path(options.getOutputDir());
 
+		// Create output path if it does not exist
 		if (srcFS.exists(basePath)) {
 			if (!srcFS.isDirectory(basePath)) 
 				throw new RuntimeException("Output path is invalid: "+basePath+" is not a directory");
@@ -209,7 +210,7 @@ public final class IOUtils {
 		if (basePath.isRoot())
 			concatPath = concatPath.substring(0, concatPath.length() - 1);
 
-		outputPath = new Path(concatPath+Configuration.SLASH+RunEC.APP_NAME);
+		outputPath = new Path(concatPath+Configuration.SLASH+RunEC.APP_NAME+"-Output");
 		OUTPUT_PATH1 = new Path(outputPath+Configuration.SLASH+"output1");
 		OUTPUT_PATH2 = new Path(outputPath+Configuration.SLASH+"output2");
 		options.setOutputDir(outputPath.toString());
@@ -228,14 +229,14 @@ public final class IOUtils {
 			mergeOutputPath = new Path(options.getMergeOutputDir());
 			dstFS = mergeOutputPath.getFileSystem(hadoopConfig);
 
+			// Create merge output path if it does not exist
 			if (dstFS.exists(mergeOutputPath)) {
-				if(!dstFS.isDirectory(mergeOutputPath)) 
+				if(!dstFS.isDirectory(mergeOutputPath))
 					throw new RuntimeException("Merge output path is invalid: "+mergeOutputPath+" is not a directory");
-
-				dstFS.delete(mergeOutputPath, true);
+			} else {
+				dstFS.mkdirs(mergeOutputPath);
 			}
 
-			dstFS.mkdirs(mergeOutputPath);
 			mergeOutputPath = dstFS.resolvePath(mergeOutputPath);
 			options.setMergeOutputDir(mergeOutputPath.toString());
 		} else {
