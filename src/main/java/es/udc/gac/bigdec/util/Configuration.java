@@ -42,7 +42,7 @@ import es.udc.gac.bigdec.ec.reckoner.RECKONER;
 
 public final class Configuration {
 
-	public static final String VERSION = "v1.2";
+	public static final String VERSION = "v1.3";
 	public static final String WEBPAGE = "https://github.com/UDC-GAC/BigDEC";
 	public static final String BIGDEC_HOME;
 	public static final String SLASH;
