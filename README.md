@@ -4,6 +4,12 @@
 
 This tool supports the processing of single-end and paired-end reads from FASTQ datasets stored in the [Hadoop Distributed File System (HDFS)](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html).
 
+### Citation
+
+If you use **BigDEC** in your research, please cite our work using the following reference:
+
+> Roberto R. Expósito, Jorge González-Domínguez. [BigDEC: A multi-algorithm Big Data tool based on the k-mer spectrum method for scalable short-read error correction](https://doi.org/10.1016/j.future.2024.01.011). Future Generation Computer Systems 154: 314-329 (2024).
+
 ## Getting Started
 
 ### Prerequisites
