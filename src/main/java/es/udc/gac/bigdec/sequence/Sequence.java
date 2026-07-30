@@ -78,7 +78,7 @@ public class Sequence {
 
 	@Override
 	public int hashCode() {
-		return this.bases.hashCode();
+		return Arrays.hashCode(bases);
 	}
 
 	@Override
