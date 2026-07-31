@@ -128,6 +128,12 @@ public final class Configuration {
 	public Boolean HDFS_DELETE_TEMP_FILES = false;
 	public Short HDFS_BLOCK_REPLICATION = 1;
 
+	public static final String DFS_REPLICATION_KEY = "dfs.replication";
+    public static final int DFS_REPLICATION_DEFAULT = 3;
+
+    public static final String DFS_BLOCK_SIZE_KEY = "dfs.blocksize";
+    public static final long DFS_BLOCK_SIZE_DEFAULT = 128L * 1024 * 1024;
+	
 	static {
 		Map<String,String> map = System.getenv();
 		BIGDEC_HOME = map.get("BIGDEC_HOME");

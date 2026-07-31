@@ -29,7 +29,6 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hadoop.io.compress.SplittableCompressionCodec;
@@ -164,7 +163,7 @@ public final class IOUtils {
 		hadoopConfig.setLong(FileInputFormat.SPLIT_MINSIZE, splitSize);
 		hadoopConfig.setLong(FileInputFormat.SPLIT_MAXSIZE, splitSize);
 		hadoopConfig.set("mapreduce.fileoutputcommitter.algorithm.version", "2");
-		hadoopConfig.setInt(DFSConfigKeys.DFS_REPLICATION_KEY, config.HDFS_BLOCK_REPLICATION);
+		hadoopConfig.setInt(Configuration.DFS_REPLICATION_KEY, config.HDFS_BLOCK_REPLICATION);
 		splitSizeMB = IOUtils.ByteToMiB(splitSize);
 
 		logger.info("END: blocks {}, blockSize {}, nsplits {}, splitsPerCore {}, splitSize {}", blocks, blockSize, nsplits, splitsPerCore, splitSize);
