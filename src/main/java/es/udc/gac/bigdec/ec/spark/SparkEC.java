@@ -134,7 +134,7 @@ public abstract class SparkEC extends ErrorCorrection {
 				Class.forName("es.udc.gac.bigdec.util.CLIOptions"),
 				Class.forName("es.udc.gac.bigdec.util.Configuration"),
 				Class.forName("es.udc.gac.bigdec.util.IOUtils"),
-				Class.forName("es.udc.gac.bigdec.util.MurmurHash3"),
+				Class.forName("es.udc.gac.bigdec.util.HashMix"),
 				Class.forName("es.udc.gac.bigdec.util.Timer"),
 				Class.forName("es.udc.gac.bigdec.RunEC"),
 				Class.forName("es.udc.gac.bigdec.RunMerge"),
