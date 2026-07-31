@@ -27,7 +27,8 @@ public class Sequence {
 	private byte[] bases;
 	private byte[] quals;
 
-	public Sequence() {}
+	public Sequence() {
+	}
 
 	public void setName(byte[] name) {
 		this.name = name;
@@ -92,7 +93,7 @@ public class Sequence {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder((bases.length*2) + name.length + 4);
+		StringBuilder sb = new StringBuilder((bases.length * 2) + name.length + 4);
 		// Print name, bases and quality scores
 		return sb.append(new String(name, 0, name.length, StandardCharsets.US_ASCII))
 				.append(new String(bases, StandardCharsets.US_ASCII))
