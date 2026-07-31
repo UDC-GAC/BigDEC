@@ -83,9 +83,10 @@ public class Sequence {
 
 	@Override
 	public boolean equals(Object other) {
-		if (other == null) return false;
-		if (!(other instanceof Sequence)) return false;
-		if (other == this) return true;
+		if (other == this)
+			return true;
+		if (!(other instanceof Sequence))
+			return false;
 		return Arrays.equals(((Sequence) other).bases, this.bases);
 	}
 
