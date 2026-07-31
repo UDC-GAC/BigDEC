@@ -18,6 +18,7 @@
  */
 package es.udc.gac.bigdec;
 
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -67,22 +68,22 @@ public class RunEC {
 		// Load configuration
 		Configuration config = new Configuration();
 
-		IOUtils.info(RunEC.APP_NAME+" "+Configuration.VERSION);
+		IOUtils.info(RunEC.APP_NAME + " " + Configuration.VERSION);
 		logger.debug("args = {}", Arrays.toString(args));
 
 		// Parse command-line options
 		CLIOptions options = new CLIOptions();
 		options.parse(Arrays.copyOfRange(args, 1, args.length));
 
-		IOUtils.info("k-mer length = "+options.getKmerLength());
+		IOUtils.info("k-mer length = " + options.getKmerLength());
 
 		if (options.getConfigPath() != null) {
-			IOUtils.info("config path = "+options.getConfigPath());
+			IOUtils.info("config path = " + options.getConfigPath());
 			config.readConfig(options.getConfigPath());
 		}
 
-		IOUtils.info("merge = "+options.getMerge());
-		IOUtils.info("merger thread = "+options.runMergerThread());
+		IOUtils.info("merge = " + options.getMerge());
+		IOUtils.info("merger thread = " + options.runMergerThread());
 
 		// Show configuration
 		config.printConfig();
@@ -108,7 +109,7 @@ public class RunEC {
 				ec = new FlinkDStream(config, options);
 			}
 		} else {
-			IOUtils.error("Invalid execution mode: "+args[0]);
+			IOUtils.error("Invalid execution mode: " + args[0]);
 		}
 
 		// Get Hadoop configuration
@@ -148,48 +149,51 @@ public class RunEC {
 
 		IOUtils.info("############# OUTPUT #############");
 
-		for(Path outputPath: outputPaths) {
+		for (Path outputPath : outputPaths) {
 			logger.debug("outputPath = {}", outputPath);
 
 			String tempFileName = null;
 			Path outputFile;
 
 			if (outputPath.getParent().equals(IOUtils.getOutputPath1()))
-				outputFile = new Path(ec.getOutputFile1()+"."+outputPath.getName());
+				outputFile = new Path(ec.getOutputFile1() + "." + outputPath.getName());
 			else
-				outputFile = new Path(ec.getOutputFile2()+"."+outputPath.getName());
+				outputFile = new Path(ec.getOutputFile2() + "." + outputPath.getName());
 
 			logger.debug("outputFile = {}", outputFile);
 			long outputFileCount = 0;
 
-			if (fs.exists(outputPath)) {
-				if (fs.isDirectory(outputPath)) {
-					Path success = new Path(outputPath+Configuration.SLASH+"_SUCCESS");
+			try {
+				FileStatus status = fs.getFileStatus(outputPath);
+				
+				if (status.isDirectory()) {
+					Path success = new Path(outputPath + Configuration.SLASH + "_SUCCESS");
 
 					// Cleanup
 					if (fs.exists(success))
 						fs.delete(success, true);
 
-					for (FileStatus file: Arrays.asList(fs.listStatus(outputPath))) {
+					for (FileStatus file : Arrays.asList(fs.listStatus(outputPath))) {
 						if (file.isFile() && file.getLen() > 0)
 							outputFileCount++;
 					}
 					logger.debug("outputFileCount = {}", outputFileCount);
 				}
+			} catch (FileNotFoundException e) {
 			}
 
 			if (outputFileCount == 1) {
 				if (EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE)
-					tempFileName = outputPath+Configuration.SLASH+"1";
+					tempFileName = outputPath + Configuration.SLASH + "1";
 				else
-					tempFileName = outputPath+Configuration.SLASH+fs.listStatus(outputPath)[0].getPath().getName();
+					tempFileName = outputPath + Configuration.SLASH + fs.listStatus(outputPath)[0].getPath().getName();
 
 				logger.debug("tempFileName = {}", tempFileName);
 				fs.rename(new Path(tempFileName), outputFile);
 				options.setMerge(false);
-				IOUtils.info("output path = "+outputFile);
+				IOUtils.info("output path = " + outputFile);
 
-				if(config.HDFS_DELETE_TEMP_FILES)
+				if (config.HDFS_DELETE_TEMP_FILES)
 					fs.delete(outputPath, true);
 			} else if (options.getMerge()) {
 				if (!options.runMergerThread()) {
@@ -197,9 +201,9 @@ public class RunEC {
 					ec.mergeOutput(outputPath, outputFile);
 					timer.stop(MERGE_TIME);
 				}
-				IOUtils.info("output path = "+outputFile);
+				IOUtils.info("output path = " + outputFile);
 			} else {
-				IOUtils.info("output path = "+outputPath);
+				IOUtils.info("output path = " + outputPath);
 			}
 		}
 
@@ -211,11 +215,12 @@ public class RunEC {
 		 * Print times
 		 */
 		IOUtils.info("############# TIMES ##############");
-		IOUtils.info("total runtime = "+IOUtils.formatTwoDecimal(timer.getTotalTime(TOTAL_TIME))+" seconds");
-		IOUtils.info("  -initialization = "+IOUtils.formatTwoDecimal(timer.getTotalTime(INIT_TIME))+" seconds");
-		IOUtils.info("  -error correction = "+IOUtils.formatTwoDecimal(timer.getTotalTime(CORRECTION_TIME))+" seconds");
+		IOUtils.info("total runtime = " + IOUtils.formatTwoDecimal(timer.getTotalTime(TOTAL_TIME)) + " seconds");
+		IOUtils.info("  -initialization = " + IOUtils.formatTwoDecimal(timer.getTotalTime(INIT_TIME)) + " seconds");
+		IOUtils.info(
+				"  -error correction = " + IOUtils.formatTwoDecimal(timer.getTotalTime(CORRECTION_TIME)) + " seconds");
 		if (!options.runMergerThread() && options.getMerge())
-			IOUtils.info("  -merge = "+IOUtils.formatTwoDecimal(timer.getTotalTime(MERGE_TIME))+" seconds");
+			IOUtils.info("  -merge = " + IOUtils.formatTwoDecimal(timer.getTotalTime(MERGE_TIME)) + " seconds");
 		IOUtils.info("##################################");
 		ec.printECTimes();
 

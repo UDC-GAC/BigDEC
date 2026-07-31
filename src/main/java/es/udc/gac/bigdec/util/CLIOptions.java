@@ -63,14 +63,14 @@ public class CLIOptions {
 				.argName("file")
 				.hasArg()
 				.numberOfArgs(1)
-				.build();
+				.get();
 		Option paired = Option.builder("p")
 				.longOpt("paired")
 				.desc("Forward and reverse input files in FASTQ format (paired-end mode)")
 				.argName("file1> <file2")
 				.hasArg()
 				.numberOfArgs(2)
-				.build();
+				.get();
 
 		OptionGroup optgrp1 = new OptionGroup();
 		optgrp1.setRequired(true);
@@ -85,7 +85,7 @@ public class CLIOptions {
 				.hasArg()
 				.numberOfArgs(1)
 				.required(false)
-				.build());
+				.get());
 
 		options.addOption(Option.builder("c")
 				.longOpt("config")
@@ -94,7 +94,7 @@ public class CLIOptions {
 				.hasArg()
 				.numberOfArgs(1)
 				.required(false)
-				.build());
+				.get());
 
 		options.addOption(Option.builder("k")
 				.longOpt("kmer-length")
@@ -103,7 +103,7 @@ public class CLIOptions {
 				.hasArg()
 				.numberOfArgs(1)
 				.required(false)
-				.build());
+				.get());
 
 		options.addOption(Option.builder("sc")
 				.longOpt("splits-core")
@@ -112,7 +112,7 @@ public class CLIOptions {
 				.hasArg()
 				.numberOfArgs(1)
 				.required(false)
-				.build());
+				.get());
 
 		options.addOption(Option.builder("m")
 				.longOpt("merge")
@@ -121,28 +121,28 @@ public class CLIOptions {
 				.optionalArg(true)
 				.numberOfArgs(1)
 				.required(false)
-				.build());
+				.get());
 
 		options.addOption(Option.builder("mtoff")
 				.longOpt("merger-thread-off")
 				.desc("Turn off merger thread")
 				.hasArg(false)
 				.required(false)
-				.build());
+				.get());
 
 		options.addOption(Option.builder("h")
 				.longOpt("help")
 				.desc("Print the help message and exit")
 				.hasArg(false)
 				.required(false)
-				.build());
+				.get());
 
 		options.addOption(Option.builder("v")
 				.longOpt("version")
 				.desc("Print the version information and exit")
 				.hasArg(false)
 				.required(false)
-				.build());
+				.get());
 	}
 
 	public String getInputFile1() {

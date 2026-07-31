@@ -23,7 +23,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.mutable.MutableInt;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.operators.AbstractStreamOperator;
 import org.apache.flink.streaming.api.operators.ChainingStrategy;
@@ -36,26 +36,28 @@ import org.slf4j.LoggerFactory;
 import es.udc.gac.bigdec.kmer.Kmer;
 import es.udc.gac.bigdec.kmer.KmerGenerator;
 
-public class KmerMapStreamOperator extends AbstractStreamOperator<Tuple2<Kmer,Integer>> 
-implements OneInputStreamOperator<Kmer, Tuple2<Kmer,Integer>>, BundleTriggerCallback {
+public class KmerMapStreamOperator extends AbstractStreamOperator<Tuple2<Kmer, Integer>>
+		implements OneInputStreamOperator<Kmer, Tuple2<Kmer, Integer>>, BundleTriggerCallback {
 	private static final Logger logger = LoggerFactory.getLogger(KmerMapStreamOperator.class);
 	private static final long serialVersionUID = 1L;
 	private static final float LOAD_FACTOR = .75F;
 
 	/** The map in heap to store elements. */
-	private final Map<Kmer, MutableInt> kmerMap;
+	private final Map<Kmer, AtomicInteger> kmerMap;
 
-	/** The trigger that determines how many elements should be put into a bundle. */
+	/**
+	 * The trigger that determines how many elements should be put into a bundle.
+	 */
 	private final CountTrigger<Kmer> trigger;
 
 	/** Output for stream records. */
-	private transient TimestampedCollector<Tuple2<Kmer,Integer>> collector;
+	private transient TimestampedCollector<Tuple2<Kmer, Integer>> collector;
 
 	public KmerMapStreamOperator(CountTrigger<Kmer> trigger) {
 		chainingStrategy = ChainingStrategy.ALWAYS;
 		this.trigger = checkNotNull(trigger, "trigger is null");
 		int size = (int) (Math.ceil((trigger.getMaxCount() + 1) / LOAD_FACTOR));
-		this.kmerMap = new HashMap<Kmer, MutableInt>(size, LOAD_FACTOR);
+		this.kmerMap = new HashMap<Kmer, AtomicInteger>(size, LOAD_FACTOR);
 		logger.info("Limit {}, KmerMap size {} ", trigger.getMaxCount(), size);
 	}
 
@@ -76,12 +78,12 @@ implements OneInputStreamOperator<Kmer, Tuple2<Kmer,Integer>>, BundleTriggerCall
 	@Override
 	public void processElement(StreamRecord<Kmer> element) throws Exception {
 		final Kmer kmer = element.getValue();
-		final MutableInt counter = kmerMap.get(kmer);
+		final AtomicInteger counter = kmerMap.get(kmer);
 
 		if (counter == null)
-			kmerMap.put(KmerGenerator.createKmer(kmer), new MutableInt(1));
+			kmerMap.put(KmerGenerator.createKmer(kmer), new AtomicInteger(1));
 		else
-			counter.increment();
+			counter.incrementAndGet();
 
 		trigger.onElement(null);
 	}
@@ -92,8 +94,8 @@ implements OneInputStreamOperator<Kmer, Tuple2<Kmer,Integer>>, BundleTriggerCall
 			if (logger.isDebugEnabled())
 				logger.debug("Collecting {} k-mers", kmerMap.size());
 
-			for (Map.Entry<Kmer, MutableInt> entry : kmerMap.entrySet()) {
-				collector.collect(Tuple2.of(entry.getKey(), entry.getValue().getValue()));
+			for (Map.Entry<Kmer, AtomicInteger> entry : kmerMap.entrySet()) {
+				collector.collect(Tuple2.of(entry.getKey(), entry.getValue().get()));
 			}
 
 			kmerMap.clear();
