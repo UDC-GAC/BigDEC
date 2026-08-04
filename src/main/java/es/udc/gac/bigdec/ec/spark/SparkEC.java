@@ -80,8 +80,8 @@ public abstract class SparkEC extends ErrorCorrection {
 
 			@Override
 			public Sequence call(Text read) {
-       			if (buffer == null)
-            		buffer = new Sequence();
+       				if (buffer == null)
+            				buffer = new Sequence();
 
 				parserBC.value().parseSequence(read.getBytes(), read.getLength(), buffer);
 				return buffer;
@@ -98,11 +98,11 @@ public abstract class SparkEC extends ErrorCorrection {
 			
 			@Override
 			public Tuple2<Sequence,Sequence> call(PairText read) {
-       			if (leftBuffer == null)
-            		leftBuffer = new Sequence();
+       				if (leftBuffer == null)
+            				leftBuffer = new Sequence();
 
 				if (rightBuffer == null)
-            		rightBuffer = new Sequence();
+            				rightBuffer = new Sequence();
 				
 				parserBC.value().parseSequence(read.getLeft().getBytes(), read.getLeft().getLength(), leftBuffer);
 				parserBC.value().parseSequence(read.getRight().getBytes(), read.getRight().getLength(), rightBuffer);
