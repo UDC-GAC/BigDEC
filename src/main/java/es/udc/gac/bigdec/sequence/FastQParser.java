@@ -26,13 +26,12 @@ public class FastQParser implements SequenceParser {
 	public static final String FASTQ_COMMENT_LINE = "\n+\n";
 
 	@Override
-	public Sequence parseSequence(byte[] bytes, int length) {
+	public void parseSequence(byte[] bytes, int length, Sequence destination) {
 		int offset = 6; // Assuming @ERRXXXXXX, @SRRXXXXXX, @DRRXXXXXX
-		Sequence seq = new Sequence();
 
 		// Read the sequence name
 		int lineLength = SequenceParser.nextToken(bytes, offset) + 1; //Include line feed
-		seq.setName(bytes, 0, lineLength + offset);
+		destination.setName(bytes, 0, lineLength + offset);
 		offset += lineLength;
 
 		// Read the sequence bases
@@ -43,7 +42,7 @@ public class FastQParser implements SequenceParser {
 		}
 
 		lineLength = SequenceParser.nextToken(bytes, offset);
-		seq.setBases(bytes, offset, lineLength);
+		destination.setBases(bytes, offset, lineLength);
 		offset += lineLength + FastQParser.FASTQ_COMMENT_LINE.length(); // Skip line feed and comment line
 
 		// Read the qualities
@@ -54,8 +53,13 @@ public class FastQParser implements SequenceParser {
 		}
 
 		lineLength = SequenceParser.nextToken(bytes, offset);
-		seq.setQuals(bytes, offset, lineLength);
-
-		return seq;
+		destination.setQuals(bytes, offset, lineLength);
 	}
+
+	@Override
+    public Sequence parseSequence(byte[] bytes, int length) {
+            Sequence seq = new Sequence();
+            parseSequence(bytes, length, seq);
+            return seq;
+    }
 }
