@@ -47,8 +47,9 @@ public class QsHistogramSingle extends RichMapFunction<Tuple2<LongWritable,Seque
 	@Override
 	public Tuple2<LongWritable,Sequence> map(Tuple2<LongWritable,Sequence> seq) throws Exception {
 		byte[] quals = seq.f1.getQuals();
-
-		for (int i=0; i<quals.length;i++) {
+		int len = seq.f1.getLength();
+		
+		for (int i=0; i<len; i++) {
 			this.histogram.add((int) quals[i]);
 		}
 
