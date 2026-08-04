@@ -27,16 +27,19 @@ public class Sequence {
 	private byte[] bases;
 	private byte[] quals;
     private short length;
+	private short nameLength;
 	
 	public Sequence() {
 	}
 
 	public void setName(byte[] name) {
 		this.name = name;
+		this.nameLength = (short) name.length;
 	}
 
 	public void setBases(byte[] bases) {
 		this.bases = bases;
+		this.length = bases.length;
 	}
 
 	public void setQuals(byte[] quals) {
@@ -47,6 +50,7 @@ public class Sequence {
         if (this.name == null || this.name.length < length) {
         	this.name = new byte[Math.max(length, this.name == null ? 25 : this.name.length * 2)];
         }
+		this.nameLength = (short) length;
         System.arraycopy(name, offset, this.name, 0, length);
     }
 
@@ -81,6 +85,10 @@ public class Sequence {
 		return length;
 	}
 
+	public String nameToString() {
+		return new String(name, 0, nameLength, StandardCharsets.US_ASCII);
+	}
+	
 	public String basesToString() {
 		return new String(bases, 0, length, StandardCharsets.US_ASCII);
 	}
@@ -125,7 +133,7 @@ public class Sequence {
 	public String toString() {
 		StringBuilder sb = new StringBuilder((bases.length * 2) + name.length + 4);
 		// Print name, bases and quality scores
-		return sb.append(new String(name, StandardCharsets.US_ASCII))
+		return sb.append(nameToString())
 				.append(basesToString())
 				.append(FastQParser.FASTQ_COMMENT_LINE)
 				.append(qualsToString()).toString();
