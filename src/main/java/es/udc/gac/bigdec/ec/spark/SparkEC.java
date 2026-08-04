@@ -76,10 +76,19 @@ public abstract class SparkEC extends ErrorCorrection {
 
 		return inputReadsRDD.values().map(new Function<Text, Sequence>() {
 			private static final long serialVersionUID = 1647254546130571830L;
+			private transient SequenceParser parser;
+    		private transient Sequence buffer;
 
 			@Override
 			public Sequence call(Text read) {
-				return parserBC.value().parseSequence(read.getBytes(), read.getLength());
+				if (parser == null)
+            		parser = parserBC.value();
+
+       			if (buffer == null)
+            		buffer = new Sequence();
+
+				parser.parseSequence(read.getBytes(), read.getLength(), buffer);
+				return buffer;
 			}
 		});
 	}
@@ -88,12 +97,24 @@ public abstract class SparkEC extends ErrorCorrection {
 
 		return inputReadsRDD.values().mapToPair(new PairFunction<PairText, Sequence, Sequence>() {
 			private static final long serialVersionUID = 1647254546130571830L;
-
+			private transient SequenceParser parser;
+    		private transient Sequence leftBuffer;
+			private transient Sequence rightBuffer;
+			
 			@Override
 			public Tuple2<Sequence,Sequence> call(PairText read) {
-				Sequence left = parserBC.value().parseSequence(read.getLeft().getBytes(), read.getLeft().getLength());
-				Sequence right = parserBC.value().parseSequence(read.getRight().getBytes(), read.getRight().getLength());
-				return new Tuple2<Sequence,Sequence>(left, right);
+				if (parser == null)
+            		parser = parserBC.value();
+
+       			if (leftBuffer == null)
+            		leftBuffer = new Sequence();
+
+				if (rightBuffer == null)
+            		rightBuffer = new Sequence();
+				
+				parser.parseSequence(read.getLeft().getBytes(), read.getLeft().getLength(), leftBuffer);
+				parser.parseSequence(read.getRight().getBytes(), read.getRight().getLength(), rightBuffer);
+				return new Tuple2<Sequence,Sequence>(leftBuffer, rightBuffer);
 			}
 		});
 	}
