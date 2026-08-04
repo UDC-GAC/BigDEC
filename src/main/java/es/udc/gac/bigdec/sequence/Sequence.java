@@ -26,7 +26,8 @@ public class Sequence {
 	private byte[] name;
 	private byte[] bases;
 	private byte[] quals;
-
+    private short length;
+	
 	public Sequence() {
 	}
 
@@ -77,13 +78,17 @@ public class Sequence {
 	}
 
 	public int getLength() {
-		return bases.length;
+		return length;
 	}
 
 	public String basesToString() {
-		return new String(bases, StandardCharsets.US_ASCII);
+		return new String(bases, 0, length, StandardCharsets.US_ASCII);
 	}
 
+	public String qualsToString() {
+        return new String(quals, 0, length, StandardCharsets.US_ASCII);
+    }
+	
 	@Override
 	public int hashCode() {
 		return Arrays.hashCode(bases);
@@ -102,9 +107,9 @@ public class Sequence {
 	public String toString() {
 		StringBuilder sb = new StringBuilder((bases.length * 2) + name.length + 4);
 		// Print name, bases and quality scores
-		return sb.append(new String(name, 0, name.length, StandardCharsets.US_ASCII))
-				.append(new String(bases, StandardCharsets.US_ASCII))
+		return sb.append(new String(name, StandardCharsets.US_ASCII))
+				.append(basesToString())
 				.append(FastQParser.FASTQ_COMMENT_LINE)
-				.append(new String(quals, StandardCharsets.US_ASCII)).toString();
+				.append(qualsToString()).toString();
 	}
 }
