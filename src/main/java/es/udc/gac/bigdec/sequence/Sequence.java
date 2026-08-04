@@ -87,10 +87,6 @@ public class Sequence {
 		return quals;
 	}
 
-	public int getLength() {
-		return length;
-	}
-
 	public short getLength() {
 		return length;
 	}
