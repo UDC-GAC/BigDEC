@@ -54,7 +54,7 @@ public class Sequence {
 
     public void setName(byte[] name, int offset, int length) {
         if (this.name == null || this.name.length < length) {
-        	this.name = new byte[Math.max(length, this.name == null ? 25 : this.name.length * 2)];
+        	this.name = new byte[length];
         }
 		this.nameLength = (short) length;
         System.arraycopy(name, offset, this.name, 0, length);
@@ -62,7 +62,7 @@ public class Sequence {
 
     public void setBases(byte[] bases, int offset, int length) {
         if (this.bases == null || this.bases.length < length) {
-        	this.bases = new byte[Math.max(length, this.bases == null ? 100 : this.bases.length * 2)];
+        	this.bases = new byte[length];
         }
         this.length = (short) length;
         System.arraycopy(bases, offset, this.bases, 0, length);
@@ -70,7 +70,7 @@ public class Sequence {
 
     public void setQuals(byte[] quals, int offset, int length) {
     	if (this.quals == null || this.quals.length < length) {
-        	this.quals = new byte[Math.max(length, this.quals == null ? 100 : this.quals.length * 2)];
+        	this.quals = new byte[length];
         }
         System.arraycopy(quals, offset, this.quals, 0, length);
     }
