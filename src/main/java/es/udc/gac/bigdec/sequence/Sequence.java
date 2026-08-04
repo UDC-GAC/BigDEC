@@ -131,7 +131,7 @@ public class Sequence {
 	
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder((bases.length * 2) + name.length + 4);
+		StringBuilder sb = new StringBuilder((length * 2) + nameLength  + 4);
 		// Print name, bases and quality scores
 		return sb.append(nameToString())
 				.append(basesToString())
