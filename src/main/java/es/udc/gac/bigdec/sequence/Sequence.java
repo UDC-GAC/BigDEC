@@ -88,21 +88,39 @@ public class Sequence {
 	public String qualsToString() {
         return new String(quals, 0, length, StandardCharsets.US_ASCII);
     }
-	
+
 	@Override
 	public int hashCode() {
-		return Arrays.hashCode(bases);
+	    int h = 1;
+
+    	for (int i = 0; i < length; i++) {
+        	h = 31 * h + bases[i];
+    	}
+
+    	return h;
 	}
 
 	@Override
-	public boolean equals(Object other) {
-		if (other == this)
-			return true;
-		if (!(other instanceof Sequence))
-			return false;
-		return Arrays.equals(((Sequence) other).bases, this.bases);
-	}
+	public boolean equals(Object obj) {
+    	if (this == obj)
+        	return true;
 
+    	if (!(obj instanceof Sequence))
+        	return false;
+
+    	Sequence other = (Sequence) obj;
+
+    	if (length != other.length)
+        	return false;
+
+    	for (int i = 0; i < length; i++) {
+        	if (bases[i] != other.bases[i])
+            	return false;
+    	}
+
+    	return true;
+	}
+	
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder((bases.length * 2) + name.length + 4);
