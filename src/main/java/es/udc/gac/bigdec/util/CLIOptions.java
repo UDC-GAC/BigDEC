@@ -116,7 +116,7 @@ public class CLIOptions {
 
 		options.addOption(Option.builder("m")
 				.longOpt("merge")
-				.desc("Merge output (output directory is optional. Use \"file:/\" scheme for local file system)")
+				.desc("Merge output (output directory is optional. Use \"file://\" scheme for local file system)")
 				.argName("dir")
 				.optionalArg(true)
 				.numberOfArgs(1)
