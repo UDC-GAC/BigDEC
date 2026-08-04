@@ -34,12 +34,10 @@ public class Sequence {
 
 	public void setName(byte[] name) {
 		this.name = name;
-		this.nameLength = (short) name.length;
 	}
 
 	public void setBases(byte[] bases) {
 		this.bases = bases;
-		this.length = (short) bases.length;
 	}
 
 	public void setQuals(byte[] quals) {
