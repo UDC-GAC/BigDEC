@@ -48,11 +48,13 @@ public abstract class FlinkEC extends ErrorCorrection {
 				inputDS.map(new MapFunction<Tuple2<LongWritable,Text>, Tuple2<LongWritable,Sequence>>() {
 
 					private static final long serialVersionUID = 1590147064464369799L;
-					private Tuple2<LongWritable,Sequence> tuple2 = new Tuple2<LongWritable,Sequence>();
-
+					private final Tuple2<LongWritable,Sequence> tuple2 = new Tuple2<LongWritable,Sequence>();
+					private final Sequence buffer = new Sequence();
+					
 					@Override
 					public Tuple2<LongWritable,Sequence> map(Tuple2<LongWritable,Text> read) throws Exception {
-						tuple2.setFields(read.f0, parser.parseSequence(read.f1.getBytes(), read.f1.getLength()));
+						parser.parseSequence(read.f1.getBytes(), read.f1.getLength(), buffer);
+						tuple2.setFields(read.f0, buffer);
 						return tuple2;
 					}
 				});
@@ -67,11 +69,13 @@ public abstract class FlinkEC extends ErrorCorrection {
 				inputDS.map(new MapFunction<Tuple2<LongWritable,Text>, Tuple2<LongWritable,Sequence>>() {
 
 					private static final long serialVersionUID = 6859750261852235091L;
-					private Tuple2<LongWritable,Sequence> tuple2 = new Tuple2<LongWritable,Sequence>();
-
+					private final Tuple2<LongWritable,Sequence> tuple2 = new Tuple2<LongWritable,Sequence>();
+					private final Sequence buffer = new Sequence();
+					
 					@Override
 					public Tuple2<LongWritable,Sequence> map(Tuple2<LongWritable,Text> read) throws Exception {
-						tuple2.setFields(read.f0, parser.parseSequence(read.f1.getBytes(), read.f1.getLength()));
+						parser.parseSequence(read.f1.getBytes(), read.f1.getLength(), buffer);
+						tuple2.setFields(read.f0, buffer);
 						return tuple2;
 					}
 				});
@@ -86,13 +90,15 @@ public abstract class FlinkEC extends ErrorCorrection {
 				inputDS.map(new MapFunction<Tuple2<LongWritable,PairText>, Tuple3<LongWritable,Sequence,Sequence>>() {
 
 					private static final long serialVersionUID = 3540455096015091189L;
-					private Tuple3<LongWritable,Sequence,Sequence> tuple3 = new Tuple3<LongWritable,Sequence,Sequence>();
-
+					private final Tuple3<LongWritable,Sequence,Sequence> tuple3 = new Tuple3<LongWritable,Sequence,Sequence>();
+					private final Sequence leftBuffer = new Sequence();
+					private final Sequence rightBuffer = new Sequence();
+					
 					@Override
 					public Tuple3<LongWritable,Sequence,Sequence> map(Tuple2<LongWritable,PairText> read) throws Exception {
-						Sequence left = parser.parseSequence(read.f1.getLeft().getBytes(), read.f1.getLeft().getLength());
-						Sequence right = parser.parseSequence(read.f1.getRight().getBytes(), read.f1.getRight().getLength());
-						tuple3.setFields(read.f0, left, right);
+						parser.parseSequence(read.f1.getLeft().getBytes(), read.f1.getLeft().getLength(), leftBuffer);
+						parser.parseSequence(read.f1.getRight().getBytes(), read.f1.getRight().getLength(), rightBuffer);
+						tuple3.setFields(read.f0, leftBuffer, rightBuffer);
 						return tuple3;
 					}
 				});
@@ -107,13 +113,15 @@ public abstract class FlinkEC extends ErrorCorrection {
 				inputDS.map(new MapFunction<Tuple2<LongWritable,PairText>, Tuple3<LongWritable,Sequence,Sequence>>() {
 
 					private static final long serialVersionUID = -5523818680286523838L;
-					private Tuple3<LongWritable,Sequence,Sequence> tuple3 = new Tuple3<LongWritable,Sequence,Sequence>();
-
+					private final Tuple3<LongWritable,Sequence,Sequence> tuple3 = new Tuple3<LongWritable,Sequence,Sequence>();
+					private final Sequence leftBuffer = new Sequence();
+					private final Sequence rightBuffer = new Sequence();
+					
 					@Override
 					public Tuple3<LongWritable,Sequence,Sequence> map(Tuple2<LongWritable,PairText> read) throws Exception {
-						Sequence left = parser.parseSequence(read.f1.getLeft().getBytes(), read.f1.getLeft().getLength());
-						Sequence right = parser.parseSequence(read.f1.getRight().getBytes(), read.f1.getRight().getLength());
-						tuple3.setFields(read.f0, left, right);
+						parser.parseSequence(read.f1.getLeft().getBytes(), read.f1.getLeft().getLength(), leftBuffer);
+						parser.parseSequence(read.f1.getRight().getBytes(), read.f1.getRight().getLength(), rightBuffer);
+						tuple3.setFields(read.f0, leftBuffer, rightBuffer);
 						return tuple3;
 					}
 				});
