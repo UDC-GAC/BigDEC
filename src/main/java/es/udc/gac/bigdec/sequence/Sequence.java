@@ -39,7 +39,7 @@ public class Sequence {
 
 	public void setBases(byte[] bases) {
 		this.bases = bases;
-		this.length = bases.length;
+		this.length = (short) bases.length;
 	}
 
 	public void setQuals(byte[] quals) {
