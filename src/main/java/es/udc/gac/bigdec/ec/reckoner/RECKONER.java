@@ -251,7 +251,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		int numCorrectedErrorsStep1_3 = 0;
 		int numCorrectedErrorsStep2 = 0;
 
-		System.arraycopy(bases, 0, basesSafe, 0, basesSafe.length);
+		System.arraycopy(bases, 0, basesSafe, 0, seqLength);
 
 		if (logger.isTraceEnabled())
 			logger.trace("Correcting {}", sequence.basesToString());
@@ -275,7 +275,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		}
 
 		if (numOfNs > 0)
-			System.arraycopy(bases, 0, basesSafe, 0, basesSafe.length);
+			System.arraycopy(bases, 0, basesSafe, 0, seqLength);
 
 		//--------------------------------------------------
 		// STEP 0-0: find solid k-mers in this read
@@ -779,6 +779,7 @@ public class RECKONER extends CorrectionAlgorithm {
 	private int correctErrorsBetweenSolidRegions(Sequence sequence, int index_start, int index_end, byte[] basesTemp, Kmer kmer, Kmer kmerRC, Kmer kmerAux, List<CandidatePath> candidatePaths, List<CandidatePath> candidatePathsTemp, byte[] basesMod) {
 		byte[] bases = sequence.getBases();
 		byte kmerLength = getKmerLength();
+		int seqLength = sequence.getLength();
 		byte base;
 		int it_alter, it_path, multi, it_check;
 		int index, index_last_modified_base, nMods, num_success;
@@ -857,7 +858,7 @@ public class RECKONER extends CorrectionAlgorithm {
 
 				if (index_last_modified_base > index_last_mod) {
 					// generate a temporary sequence
-					System.arraycopy(bases, 0, basesTemp, 0, bases.length);
+					System.arraycopy(bases, 0, basesTemp, 0, seqLength);
 					for(Correction corr: modifiedBasesList)
 						basesTemp[corr.getIndex()] = corr.getBase();
 
@@ -1722,6 +1723,7 @@ public class RECKONER extends CorrectionAlgorithm {
 	private void performExtendOutLeft(Kmer kmer, Sequence sequence, byte[] sequence_tmp, CandidatePath candidatePath, List<CandidatePath> candidatePaths, Kmer kmerRC, Kmer kmerAux) {
 		int index_smallest_modified = 0, extend_amount, it_alter;
 		byte kmerLength = getKmerLength();
+		int seqLength = sequence.getLength();
 		List<Correction> modifiedBases = candidatePath.getModifiedBases();
 		boolean extensionSuccess = false;
 		int multi, max_extended_kmer_quality = 0;
@@ -1739,7 +1741,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		// extension is needed
 
 		// generate a temporary sequence
-		System.arraycopy(sequence.getBases(), 0, sequence_tmp, 0, sequence_tmp.length);
+		System.arraycopy(sequence.getBases(), 0, sequence_tmp, 0, seqLength);
 
 		// applied the modified bases to sequence_tmp
 		for(Correction corr: modifiedBases)
@@ -1834,7 +1836,7 @@ public class RECKONER extends CorrectionAlgorithm {
 	private void performExtendOutRight(Kmer kmer, Sequence sequence, byte[] sequence_tmp, CandidatePath candidatePath, List<CandidatePath> candidatePaths, Kmer kmerRC, Kmer kmerAux) {
 		int index_largest_modified, extend_amount, it_alter;
 		byte kmerLength = getKmerLength();
-		int seqLength = sequence_tmp.length;
+		int seqLength = sequence.getLength();
 		int size = seqLength - kmerLength;
 		List<Correction> modifiedBases = candidatePath.getModifiedBases();
 		boolean extensionSuccess = false;
@@ -1856,7 +1858,7 @@ public class RECKONER extends CorrectionAlgorithm {
 		// extension is needed
 
 		// generate a temporary sequence
-		System.arraycopy(sequence.getBases(), 0, sequence_tmp, 0, sequence_tmp.length);
+		System.arraycopy(sequence.getBases(), 0, sequence_tmp, 0, seqLength);
 
 		// applied the modified bases to sequence_tmp
 		for(Correction corr: modifiedBases)
