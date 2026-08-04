@@ -91,6 +91,10 @@ public class Sequence {
 		return length;
 	}
 
+	public short getLength() {
+		return length;
+	}
+
 	public short getNameLength() {
     	return nameLength;
 	}
