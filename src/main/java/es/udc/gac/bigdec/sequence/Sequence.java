@@ -46,6 +46,14 @@ public class Sequence {
 		this.quals = quals;
 	}
 
+	public void setLength(short length) {
+    	this.length = length;
+	}
+
+	public void setNameLength(short nameLength) {
+    	this.nameLength = nameLength;
+	}
+
     public void setName(byte[] name, int offset, int length) {
         if (this.name == null || this.name.length < length) {
         	this.name = new byte[Math.max(length, this.name == null ? 25 : this.name.length * 2)];
@@ -85,6 +93,10 @@ public class Sequence {
 		return length;
 	}
 
+	public short getNameLength() {
+    	return nameLength;
+	}
+	
 	public String nameToString() {
 		return new String(name, 0, nameLength, StandardCharsets.US_ASCII);
 	}
