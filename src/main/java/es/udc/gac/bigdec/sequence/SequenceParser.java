@@ -26,6 +26,7 @@ public interface SequenceParser extends Serializable {
 	public static final byte LF_BYTE = '\n';
 
 	public abstract Sequence parseSequence(byte[] bytes, int length);
+    public abstract void parseSequence(byte[] bytes, int length, Sequence destination);
 
 	public static int nextToken(byte[] bytes, int offset) {
 		int posTmp = offset;
