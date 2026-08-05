@@ -44,5 +44,5 @@ fi
 # Restore positional parameters
 set -- "${SPARK_ARGS[@]}"
 
-echo "spark-submit "$@" --class es.udc.gac.bigdec.RunEC $BIGDEC_HOME/target/bigdec-bin.jar spark ${BIGDEC_ARGS}"
+echo "spark-submit $LOG_ARGS "$@" --class es.udc.gac.bigdec.RunEC $BIGDEC_HOME/target/bigdec-bin.jar spark ${BIGDEC_ARGS}"
 spark-submit $LOG_ARGS "$@" --class es.udc.gac.bigdec.RunEC $BIGDEC_HOME/target/bigdec-bin.jar spark ${BIGDEC_ARGS}
