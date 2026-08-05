@@ -189,10 +189,12 @@ public class RunEC {
 			logger.debug("outputFileCount = {}", outputFileCount);
 			
 			if (outputFileCount == 1) {
-				if (EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE && tempFileName == null)
-					tempFileName = outputPath + Configuration.SLASH + "1";
-				else
+				if (EXECUTION_ENGINE == ExecutionEngine.FLINK_MODE) {
+					if (tempFileName == null)
+						tempFileName = outputPath + Configuration.SLASH + "1";
+				} else {
 					tempFileName = outputPath + Configuration.SLASH + fs.listStatus(outputPath)[0].getPath().getName();
+				}
 				
 				logger.debug("tempFileName = {}", tempFileName);
 				fs.rename(new Path(tempFileName), outputFile);
