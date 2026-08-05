@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.operators.AbstractStreamOperator;
+import org.apache.flink.streaming.api.operators.BoundedOneInput;
 import org.apache.flink.streaming.api.operators.ChainingStrategy;
 import org.apache.flink.streaming.api.operators.OneInputStreamOperator;
 import org.apache.flink.streaming.api.operators.TimestampedCollector;
@@ -37,7 +38,7 @@ import es.udc.gac.bigdec.kmer.Kmer;
 import es.udc.gac.bigdec.kmer.KmerGenerator;
 
 public class KmerMapStreamOperator extends AbstractStreamOperator<Tuple2<Kmer, Integer>>
-		implements OneInputStreamOperator<Kmer, Tuple2<Kmer, Integer>>, BundleTriggerCallback {
+		implements OneInputStreamOperator<Kmer, Tuple2<Kmer, Integer>>, BoundedOneInput, BundleTriggerCallback {
 	private static final Logger logger = LoggerFactory.getLogger(KmerMapStreamOperator.class);
 	private static final long serialVersionUID = 1L;
 	private static final float LOAD_FACTOR = .75F;
@@ -70,8 +71,9 @@ public class KmerMapStreamOperator extends AbstractStreamOperator<Tuple2<Kmer, I
 		trigger.reset();
 	}
 
-	public void finish() throws Exception {
-		logger.info("Finishing k-mer map stream operator: {} elements", kmerMap.size());
+	@Override
+	public void endInput() throws Exception {
+		logger.info("End of input reached. Flushing remaining {} elements", kmerMap.size());
 		finishBundle();
 	}
 
