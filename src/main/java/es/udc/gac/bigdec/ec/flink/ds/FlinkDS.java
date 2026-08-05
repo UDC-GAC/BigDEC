@@ -44,8 +44,6 @@ import es.udc.gac.bigdec.ec.flink.CorrectSingle;
 import es.udc.gac.bigdec.ec.flink.FlinkEC;
 import es.udc.gac.bigdec.ec.flink.HadoopFileInputFormat;
 import es.udc.gac.bigdec.ec.flink.KmerCsvOutputFormat;
-import es.udc.gac.bigdec.ec.flink.KmerGenPaired;
-import es.udc.gac.bigdec.ec.flink.KmerGenSingle;
 import es.udc.gac.bigdec.ec.flink.KmerHistogram;
 import es.udc.gac.bigdec.ec.flink.QsHistogramPaired;
 import es.udc.gac.bigdec.ec.flink.QsHistogramSingle;
