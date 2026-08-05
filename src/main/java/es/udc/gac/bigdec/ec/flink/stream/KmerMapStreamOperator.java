@@ -96,7 +96,7 @@ public class KmerMapStreamOperator extends AbstractStreamOperator<Tuple2<Kmer, I
 			if (logger.isDebugEnabled())
 				logger.debug("Collecting {} k-mers", kmerMap.size());
 
-			for (Map.Entry<Kmer, AtomicInteger> entry : kmerMap.entrySet()) {
+			for (Map.Entry<Kmer, MutableInt> entry : kmerMap.entrySet()) {
 				collector.collect(Tuple2.of(entry.getKey(), entry.getValue().intValue()));
 			}
 
