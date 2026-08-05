@@ -38,7 +38,8 @@ fi
 LOG_CONF="$BIGDEC_HOME/conf/log4j2.properties"
 LOG_ARGS=""
 if [ -f "$LOG_CONF" ]; then
-    LOG_ARGS="--files $LOG_CONF --conf spark.driver.extraJavaOptions=-Dlog4j2.configurationFile=log4j2.properties --conf spark.executor.extraJavaOptions=-Dlog4j2.configurationFile=log4j2.properties"
+	# The driver uses the local absolute path, the executors use the distributed file
+    LOG_ARGS="--files $LOG_CONF --conf spark.driver.extraJavaOptions=-Dlog4j2.configurationFile=file://$LOG_CONF --conf spark.executor.extraJavaOptions=-Dlog4j2.configurationFile=log4j2.properties"
 fi
 
 # Restore positional parameters
