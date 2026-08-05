@@ -18,10 +18,11 @@
  */
 package es.udc.gac.bigdec.sequence;
 
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-public class Sequence {
+public class Sequence implements Serializable {
 
 	private byte[] name;
 	private byte[] bases;
