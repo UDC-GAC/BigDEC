@@ -23,7 +23,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.operators.AbstractStreamOperator;
 import org.apache.flink.streaming.api.operators.BoundedOneInput;
@@ -44,7 +44,7 @@ public class KmerMapStreamOperator extends AbstractStreamOperator<Tuple2<Kmer, I
 	private static final float LOAD_FACTOR = .75F;
 
 	/** The map in heap to store elements. */
-	private final Map<Kmer, AtomicInteger> kmerMap;
+	private final Map<Kmer, MutableInt> kmerMap;
 
 	/**
 	 * The trigger that determines how many elements should be put into a bundle.
@@ -58,7 +58,7 @@ public class KmerMapStreamOperator extends AbstractStreamOperator<Tuple2<Kmer, I
 		chainingStrategy = ChainingStrategy.ALWAYS;
 		this.trigger = checkNotNull(trigger, "trigger is null");
 		int size = (int) (Math.ceil((trigger.getMaxCount() + 1) / LOAD_FACTOR));
-		this.kmerMap = new HashMap<Kmer, AtomicInteger>(size, LOAD_FACTOR);
+		this.kmerMap = new HashMap<Kmer, MutableInt>(size, LOAD_FACTOR);
 		logger.info("Limit {}, KmerMap size {} ", trigger.getMaxCount(), size);
 	}
 
@@ -80,12 +80,12 @@ public class KmerMapStreamOperator extends AbstractStreamOperator<Tuple2<Kmer, I
 	@Override
 	public void processElement(StreamRecord<Kmer> element) throws Exception {
 		final Kmer kmer = element.getValue();
-		final AtomicInteger counter = kmerMap.get(kmer);
+		final MutableInt counter = kmerMap.get(kmer);
 
 		if (counter == null)
-			kmerMap.put(KmerGenerator.createKmer(kmer), new AtomicInteger(1));
+			kmerMap.put(KmerGenerator.createKmer(kmer), new MutableInt(1));
 		else
-			counter.incrementAndGet();
+			counter.increment();
 
 		trigger.onElement(null);
 	}
@@ -97,7 +97,7 @@ public class KmerMapStreamOperator extends AbstractStreamOperator<Tuple2<Kmer, I
 				logger.debug("Collecting {} k-mers", kmerMap.size());
 
 			for (Map.Entry<Kmer, AtomicInteger> entry : kmerMap.entrySet()) {
-				collector.collect(Tuple2.of(entry.getKey(), entry.getValue().get()));
+				collector.collect(Tuple2.of(entry.getKey(), entry.getValue().intValue()));
 			}
 
 			kmerMap.clear();
