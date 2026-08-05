@@ -96,15 +96,15 @@ public class Sequence {
 	}
 	
 	public String nameToString() {
-		return new String(name, 0, nameLength, StandardCharsets.US_ASCII);
+		return name == null ? "" : new String(name, 0, nameLength, StandardCharsets.US_ASCII);
 	}
 	
 	public String basesToString() {
-		return new String(bases, 0, length, StandardCharsets.US_ASCII);
+		return bases == null ? "" : new String(bases, 0, length, StandardCharsets.US_ASCII);
 	}
 
 	public String qualsToString() {
-        return new String(quals, 0, length, StandardCharsets.US_ASCII);
+		return quals == null ? "" : new String(quals, 0, length, StandardCharsets.US_ASCII);
     }
 
 	@Override
