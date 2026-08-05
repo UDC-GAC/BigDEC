@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.Properties;
 
-import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,18 +141,6 @@ public final class Configuration {
 			throw new RuntimeException("'BIGDEC_HOME' must be set");
 
 		SLASH = System.getProperty("file.separator");
-		String LOG_GILE = BIGDEC_HOME+SLASH+"conf"+SLASH+"log4j.properties";
-
-		try {
-			Properties p = new Properties();
-			p.load(new FileInputStream(LOG_GILE));
-			PropertyConfigurator.configure(p);
-		} catch (FileNotFoundException e) {
-			IOUtils.error(e.getMessage());
-		} catch (IOException e) {
-			IOUtils.error(e.getMessage());
-		}
-
 		logger.debug("BIGDEC_HOME = {}", BIGDEC_HOME);
 	}
 
