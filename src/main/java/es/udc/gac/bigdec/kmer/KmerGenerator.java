@@ -64,11 +64,12 @@ public final class KmerGenerator {
 			List<scala.Tuple2<Kmer,Short>> listOfKmers) {
 
 		byte[] bases = sequence.getBases();
+		int seqLength = sequence.getLength();
 		int i = 0;
 		Kmer newKmer;
 		final int kLen = kmerLength - 1;
 
-		while (i + kLen < bases.length) {
+		while (i + kLen < seqLength) {
 			if (ignoreNBases) {
 				kmer.set(bases, i, kmerLength);
 			} else if (!kmer.load(bases, i, kmerLength)) {
@@ -90,7 +91,7 @@ public final class KmerGenerator {
 			i += kmerLength;
 
 			// Generate remaining k-mers for this read
-			while (i < bases.length) {
+			while (i < seqLength) {
 				if (!ignoreNBases && Kmer.isNBase(bases[i])) {
 					i++;
 					break;
@@ -106,11 +107,12 @@ public final class KmerGenerator {
 			List<scala.Tuple2<KmerKey,Short>> listOfKmers) {
 
 		byte[] bases = sequence.getBases();
+		int seqLength = sequence.getLength();
 		int i = 0;
 		long newKmer;
 		final int kLen = kmerLength - 1;
 
-		while (i + kLen < bases.length) {
+		while (i + kLen < seqLength) {
 			if (ignoreNBases) {
 				kmer.set(bases, i, kmerLength);
 			} else if (!kmer.load(bases, i, kmerLength)) {
@@ -132,7 +134,7 @@ public final class KmerGenerator {
 			i += kmerLength;
 
 			// Generate remaining k-mers for this read
-			while (i < bases.length) {
+			while (i < seqLength) {
 				if (!ignoreNBases && Kmer.isNBase(bases[i])) {
 					i++;
 					break;
@@ -148,10 +150,11 @@ public final class KmerGenerator {
 			Tuple2<Kmer,Integer> tuple2, boolean ignoreNBases, Collector<Tuple2<Kmer,Integer>> listOfKmers) {
 
 		byte[] bases = sequence.getBases();
+		int seqLength = sequence.getLength();
 		int i = 0;
 		final int kLen = kmerLength - 1;
 
-		while (i + kLen < bases.length) {
+		while (i + kLen < seqLength) {
 			if (ignoreNBases) {
 				kmer.set(bases, i, kmerLength);
 			} else if (!kmer.load(bases, i, kmerLength)) {
@@ -173,7 +176,7 @@ public final class KmerGenerator {
 			i += kmerLength;
 
 			// Generate remaining k-mers for this read
-			while (i < bases.length) {
+			while (i < seqLength) {
 				if (!ignoreNBases && Kmer.isNBase(bases[i])) {
 					i++;
 					break;
@@ -189,10 +192,11 @@ public final class KmerGenerator {
 			Collector<Kmer> listOfKmers) {
 
 		byte[] bases = sequence.getBases();
+		int seqLength = sequence.getLength();
 		int i = 0;
 		final int kLen = kmerLength - 1;
 
-		while (i + kLen < bases.length) {
+		while (i + kLen < seqLength) {
 			if (ignoreNBases) {
 				kmer.set(bases, i, kmerLength);
 			} else if (!kmer.load(bases, i, kmerLength)) {
@@ -213,7 +217,7 @@ public final class KmerGenerator {
 			i += kmerLength;
 
 			// Generate remaining k-mers for this read
-			while (i < bases.length) {
+			while (i < seqLength) {
 				if (!ignoreNBases && Kmer.isNBase(bases[i])) {
 					i++;
 					break;

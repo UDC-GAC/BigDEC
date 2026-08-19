@@ -230,9 +230,11 @@ public final class Kmer implements Comparable<Kmer>, Serializable {
 
 	@Override
 	public boolean equals(Object other) {
-		if (other instanceof Kmer)
-			return bases == ((Kmer) other).bases;
-		return false;
+		if (this == other)
+			return true;
+		if (!(other instanceof Kmer))
+			return false;
+		return bases == ((Kmer) other).bases;
 	}
 
 	@Override

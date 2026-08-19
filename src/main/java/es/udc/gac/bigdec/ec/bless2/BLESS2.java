@@ -288,7 +288,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		int maxAllowedNs = (int) (seqLength * MAX_N_RATIO);
 		int maxTrimmedBases = 0;
 
-		System.arraycopy(bases, 0, basesSafe, 0, basesSafe.length);
+		System.arraycopy(bases, 0, basesSafe, 0, seqLength);
 
 		// too short read: no trimming
 		if (seqLength > MIN_BASES_AFTER_TRIMMING)
@@ -316,7 +316,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 		}
 
 		if (numOfNs > 0)
-			System.arraycopy(bases, 0, basesSafe, 0, basesSafe.length);
+			System.arraycopy(bases, 0, basesSafe, 0, seqLength);
 
 		//--------------------------------------------------
 		// STEP 0-0: find solid k-mers in this read
@@ -1059,7 +1059,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 			if (index_last_modified_base > index_last_mod) {
 				// checking is needed
 				// generate a temporary sequence
-				System.arraycopy(bases, 0, basesTemp, 0, bases.length);
+				System.arraycopy(bases, 0, basesTemp, 0, seqLength);
 
 				// applied the modified bases to sequence_tmp
 				for(Correction corr: modifiedBasesList)
@@ -2920,6 +2920,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 
 		int index_smallest_modified = 0, extend_amount, it_alter;
 		byte kmerLength = getKmerLength();
+		int seqLength = sequence.getLength();
 		List<Correction> modifiedBases = candidatePath.getModifiedBases();
 		boolean extensionSuccess = false;
 		int multi;
@@ -2935,7 +2936,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 
 		// extension is needed
 		// generate a temporary sequence
-		System.arraycopy(sequence.getBases(), 0, sequence_tmp, 0, sequence_tmp.length);
+		System.arraycopy(sequence.getBases(), 0, sequence_tmp, 0, seqLength);
 
 		// applied the modified bases to sequence_tmp
 		for(Correction corr: modifiedBases)
@@ -3048,7 +3049,7 @@ public class BLESS2 extends CorrectionAlgorithm {
 
 		// extension is needed
 		// generate a temporary sequence
-		System.arraycopy(sequence.getBases(), 0, sequence_tmp, 0, sequence_tmp.length);
+		System.arraycopy(sequence.getBases(), 0, sequence_tmp, 0, seqLength);
 
 		// applied the modified bases to sequence_tmp
 		for(Correction corr: modifiedBases)

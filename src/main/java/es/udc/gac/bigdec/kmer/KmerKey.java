@@ -20,9 +20,9 @@ package es.udc.gac.bigdec.kmer;
 
 import java.io.Serializable;
 
-import es.udc.gac.bigdec.util.MurmurHash3;
+import es.udc.gac.bigdec.util.HashMix;
 
-public final class KmerKey implements Comparable<KmerKey>,Serializable {
+public final class KmerKey implements Comparable<KmerKey>, Serializable {
 
 	private static final long serialVersionUID = 7764883088225952323L;
 
@@ -56,13 +56,17 @@ public final class KmerKey implements Comparable<KmerKey>,Serializable {
 
 	@Override
 	public boolean equals(Object other) {
-		if (other instanceof KmerKey)
-			return bases == ((KmerKey)other).bases;
-		return false;
+		if (this == other)
+			return true;
+
+		if (!(other instanceof KmerKey))
+			return false;
+
+		return bases == ((KmerKey) other).bases;
 	}
 
 	@Override
 	public int hashCode() {
-		return MurmurHash3.hashLong(bases);
+		return HashMix.xxHashLong(bases);
 	}
 }

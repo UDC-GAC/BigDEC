@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.operators.AbstractStreamOperator;
+import org.apache.flink.streaming.api.operators.BoundedOneInput;
 import org.apache.flink.streaming.api.operators.ChainingStrategy;
 import org.apache.flink.streaming.api.operators.OneInputStreamOperator;
 import org.apache.flink.streaming.api.operators.TimestampedCollector;
@@ -36,8 +37,8 @@ import org.slf4j.LoggerFactory;
 import es.udc.gac.bigdec.kmer.Kmer;
 import es.udc.gac.bigdec.kmer.KmerGenerator;
 
-public class KmerMapStreamOperator extends AbstractStreamOperator<Tuple2<Kmer,Integer>> 
-implements OneInputStreamOperator<Kmer, Tuple2<Kmer,Integer>>, BundleTriggerCallback {
+public class KmerMapStreamOperator extends AbstractStreamOperator<Tuple2<Kmer, Integer>>
+		implements OneInputStreamOperator<Kmer, Tuple2<Kmer, Integer>>, BoundedOneInput, BundleTriggerCallback {
 	private static final Logger logger = LoggerFactory.getLogger(KmerMapStreamOperator.class);
 	private static final long serialVersionUID = 1L;
 	private static final float LOAD_FACTOR = .75F;
@@ -45,11 +46,13 @@ implements OneInputStreamOperator<Kmer, Tuple2<Kmer,Integer>>, BundleTriggerCall
 	/** The map in heap to store elements. */
 	private final Map<Kmer, MutableInt> kmerMap;
 
-	/** The trigger that determines how many elements should be put into a bundle. */
+	/**
+	 * The trigger that determines how many elements should be put into a bundle.
+	 */
 	private final CountTrigger<Kmer> trigger;
 
 	/** Output for stream records. */
-	private transient TimestampedCollector<Tuple2<Kmer,Integer>> collector;
+	private transient TimestampedCollector<Tuple2<Kmer, Integer>> collector;
 
 	public KmerMapStreamOperator(CountTrigger<Kmer> trigger) {
 		chainingStrategy = ChainingStrategy.ALWAYS;
@@ -68,8 +71,9 @@ implements OneInputStreamOperator<Kmer, Tuple2<Kmer,Integer>>, BundleTriggerCall
 		trigger.reset();
 	}
 
-	public void finish() throws Exception {
-		logger.info("Finishing k-mer map stream operator: {} elements", kmerMap.size());
+	@Override
+	public void endInput() throws Exception {
+		logger.info("End of input reached. Flushing remaining {} elements", kmerMap.size());
 		finishBundle();
 	}
 
@@ -93,7 +97,7 @@ implements OneInputStreamOperator<Kmer, Tuple2<Kmer,Integer>>, BundleTriggerCall
 				logger.debug("Collecting {} k-mers", kmerMap.size());
 
 			for (Map.Entry<Kmer, MutableInt> entry : kmerMap.entrySet()) {
-				collector.collect(Tuple2.of(entry.getKey(), entry.getValue().getValue()));
+				collector.collect(Tuple2.of(entry.getKey(), entry.getValue().intValue()));
 			}
 
 			kmerMap.clear();

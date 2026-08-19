@@ -48,8 +48,9 @@ public class QsHistogramPaired extends RichMapFunction<Tuple3<LongWritable,Seque
 	public Tuple3<LongWritable,Sequence,Sequence> map(Tuple3<LongWritable,Sequence,Sequence> seq) throws Exception {
 		byte[] qualsLeft = seq.f1.getQuals();
 		byte[] qualsRight = seq.f2.getQuals();
-
-		for (int i=0; i<qualsLeft.length;i++) {
+		int len = seq.f1.getLength();
+		
+		for (int i=0; i<len; i++) {
 			this.histogram.add((int) qualsLeft[i]);
 			this.histogram.add((int) qualsRight[i]);
 		}

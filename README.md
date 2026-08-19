@@ -14,16 +14,16 @@ If you use **BigDEC** in your research, please cite our work using the following
 
 ### Prerequisites
 
-* Make sure you have Java Runtime Environment (JRE) version 1.8 or above.
+* Make sure you have Java Runtime Environment (JRE) version 11 or above.
   * JAVA_HOME environmental variable must be set accordingly.
 
-* For Spark, make sure you have a working distribution version 2.4 or above.
+* For Spark, make sure you have a working distribution version 3.0 or above.
   * Note that the *spark-submit* command needs to be available in PATH.
   * See [Spark's Cluster Overview](https://spark.apache.org/docs/latest/cluster-overview.html).
 
-* For Flink, make sure you have a working distribution version 1.12 or above.
+* For Flink, make sure you have a working distribution version 1.15 or above.
   * Note that the *flink* command needs to be available in PATH.
-  * See [Flink's Cluster Overview](https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/concepts/flink-architecture/#anatomy-of-a-flink-cluster).
+  * See [Flink's Cluster Overview](https://nightlies.apache.org/flink/flink-docs-release-1.15/docs/concepts/flink-architecture/#anatomy-of-a-flink-cluster).
 
 * Download BigDEC from releases page and unzip the tarball. Alternatively, clone the github repository by executing the following command:
 
@@ -116,7 +116,7 @@ In addition to the above parameters and a few others that are specific for Spark
 
 In case you need to recompile BigDEC the prerequisites are:
 
-* Make sure you have Java Develpment Kit (JDK) version 1.8 or above.
+* Make sure you have Java Develpment Kit (JDK) version 11 or above.
 
 * Make sure you have a working Apache Maven distribution version 3.5 or above.
   * See [Installing Apache Maven](https://maven.apache.org/install.html).

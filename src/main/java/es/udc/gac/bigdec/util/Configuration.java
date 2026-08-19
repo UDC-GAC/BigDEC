@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.Properties;
 
-import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +41,7 @@ import es.udc.gac.bigdec.ec.reckoner.RECKONER;
 
 public final class Configuration {
 
-	public static final String VERSION = "v1.2";
+	public static final String VERSION = "v1.3";
 	public static final String WEBPAGE = "https://github.com/UDC-GAC/BigDEC";
 	public static final String BIGDEC_HOME;
 	public static final String SLASH;
@@ -128,6 +127,12 @@ public final class Configuration {
 	public Boolean HDFS_DELETE_TEMP_FILES = false;
 	public Short HDFS_BLOCK_REPLICATION = 1;
 
+	public static final String DFS_REPLICATION_KEY = "dfs.replication";
+    public static final int DFS_REPLICATION_DEFAULT = 3;
+
+    public static final String DFS_BLOCK_SIZE_KEY = "dfs.blocksize";
+    public static final long DFS_BLOCK_SIZE_DEFAULT = 128L * 1024 * 1024;
+	
 	static {
 		Map<String,String> map = System.getenv();
 		BIGDEC_HOME = map.get("BIGDEC_HOME");
@@ -136,18 +141,6 @@ public final class Configuration {
 			throw new RuntimeException("'BIGDEC_HOME' must be set");
 
 		SLASH = System.getProperty("file.separator");
-		String LOG_GILE = BIGDEC_HOME+SLASH+"conf"+SLASH+"log4j.properties";
-
-		try {
-			Properties p = new Properties();
-			p.load(new FileInputStream(LOG_GILE));
-			PropertyConfigurator.configure(p);
-		} catch (FileNotFoundException e) {
-			IOUtils.error(e.getMessage());
-		} catch (IOException e) {
-			IOUtils.error(e.getMessage());
-		}
-
 		logger.debug("BIGDEC_HOME = {}", BIGDEC_HOME);
 	}
 

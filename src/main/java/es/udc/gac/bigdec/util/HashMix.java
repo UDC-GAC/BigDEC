@@ -18,14 +18,32 @@
  */
 package es.udc.gac.bigdec.util;
 
-public final class MurmurHash3 {
+public final class HashMix {
 	private static final int C1 = 0x85EBCA6B;
 	private static final int C2 = 0xC2B2AE35;
 	private static final long C3 = 0xff51afd7ed558ccdL;
 	private static final long C4 = 0xc4ceb9fe1a85ec53L;
 	private static final long C5 = 0x9FB21C651E98DF25L;
 
-	public static final int hashInt(int h) {
+	private HashMix() {
+	}
+
+	public static int xxHashLong(long k) {
+		long h = xxh3Rrmxmx(k);
+		return (int) (h ^ (h >>> 32));
+	}
+
+	public static int murmurLong(long k) {
+		long h = fmix64(k);
+		return (int) (h ^ (h >>> 32));
+	}
+
+	public static int murmurInt(int k) {
+		return fmix32(k);
+	}
+
+	// MurmurHash3 32 bits
+	private static int fmix32(int h) {
 		h ^= h >>> 16;
 		h *= C1;
 		h ^= h >>> 13;
@@ -33,11 +51,8 @@ public final class MurmurHash3 {
 		return h ^ h >>> 16;
 	}
 
-	public static final int hashLong(long k) {
-		return (int) fmix64_opt(k);
-	}
-
-	public static final long fmix64(long k) {
+	// MurmurHash3 64 bits
+	private static long fmix64(long k) {
 		k ^= k >>> 33;
 		k *= C3;
 		k ^= k >>> 33;
@@ -45,7 +60,8 @@ public final class MurmurHash3 {
 		return k ^ k >>> 33;
 	}
 
-	public static final long fmix64_opt(long k) {
+	// XXH3 final avalanche (rrmxmx)
+	private static long xxh3Rrmxmx(long k) {
 		k ^= Long.rotateRight(k, 49) ^ Long.rotateRight(k, 24);
 		k *= C5;
 		k ^= k >>> 28;

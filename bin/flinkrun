@@ -34,8 +34,15 @@ if [ -z "$BIGDEC_ARGS" ]; then
         help
 fi
 
+# Logging configuration for Flink
+LOG_CONF="$BIGDEC_HOME/conf/log4j2.properties"
+LOG_ARGS=""
+if [ -f "$LOG_CONF" ]; then
+    LOG_ARGS="-Denv.java.opts=-Dlog4j2.configurationFile=$LOG_CONF"
+fi
+
 # Restore positional parameters
 set -- "${FLINK_ARGS[@]}"
 
-echo "flink run "$@" --class es.udc.gac.bigdec.RunEC $BIGDEC_HOME/target/bigdec-bin.jar flink ${BIGDEC_ARGS}"
-flink run "$@" --class es.udc.gac.bigdec.RunEC $BIGDEC_HOME/target/bigdec-bin.jar flink ${BIGDEC_ARGS}
+echo "flink run $LOG_ARGS "$@" --class es.udc.gac.bigdec.RunEC $BIGDEC_HOME/target/bigdec-bin.jar flink ${BIGDEC_ARGS}"
+flink run $LOG_ARGS "$@" --class es.udc.gac.bigdec.RunEC $BIGDEC_HOME/target/bigdec-bin.jar flink ${BIGDEC_ARGS}

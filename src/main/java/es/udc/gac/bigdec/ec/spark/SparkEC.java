@@ -76,10 +76,15 @@ public abstract class SparkEC extends ErrorCorrection {
 
 		return inputReadsRDD.values().map(new Function<Text, Sequence>() {
 			private static final long serialVersionUID = 1647254546130571830L;
+    		private transient Sequence buffer;
 
 			@Override
 			public Sequence call(Text read) {
-				return parserBC.value().parseSequence(read.getBytes(), read.getLength());
+       				if (buffer == null)
+            				buffer = new Sequence();
+
+				parserBC.value().parseSequence(read.getBytes(), read.getLength(), buffer);
+				return buffer;
 			}
 		});
 	}
@@ -88,12 +93,20 @@ public abstract class SparkEC extends ErrorCorrection {
 
 		return inputReadsRDD.values().mapToPair(new PairFunction<PairText, Sequence, Sequence>() {
 			private static final long serialVersionUID = 1647254546130571830L;
-
+    		private transient Sequence leftBuffer;
+			private transient Sequence rightBuffer;
+			
 			@Override
 			public Tuple2<Sequence,Sequence> call(PairText read) {
-				Sequence left = parserBC.value().parseSequence(read.getLeft().getBytes(), read.getLeft().getLength());
-				Sequence right = parserBC.value().parseSequence(read.getRight().getBytes(), read.getRight().getLength());
-				return new Tuple2<Sequence,Sequence>(left, right);
+       				if (leftBuffer == null)
+            				leftBuffer = new Sequence();
+
+				if (rightBuffer == null)
+            				rightBuffer = new Sequence();
+				
+				parserBC.value().parseSequence(read.getLeft().getBytes(), read.getLeft().getLength(), leftBuffer);
+				parserBC.value().parseSequence(read.getRight().getBytes(), read.getRight().getLength(), rightBuffer);
+				return new Tuple2<Sequence,Sequence>(leftBuffer, rightBuffer);
 			}
 		});
 	}
@@ -134,7 +147,7 @@ public abstract class SparkEC extends ErrorCorrection {
 				Class.forName("es.udc.gac.bigdec.util.CLIOptions"),
 				Class.forName("es.udc.gac.bigdec.util.Configuration"),
 				Class.forName("es.udc.gac.bigdec.util.IOUtils"),
-				Class.forName("es.udc.gac.bigdec.util.MurmurHash3"),
+				Class.forName("es.udc.gac.bigdec.util.HashMix"),
 				Class.forName("es.udc.gac.bigdec.util.Timer"),
 				Class.forName("es.udc.gac.bigdec.RunEC"),
 				Class.forName("es.udc.gac.bigdec.RunMerge"),

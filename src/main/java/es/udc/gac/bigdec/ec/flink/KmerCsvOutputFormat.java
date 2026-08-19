@@ -30,11 +30,11 @@ import org.apache.flink.core.fs.Path;
 import org.apache.flink.core.fs.SafetyNetWrapperFileSystem;
 import org.apache.flink.runtime.fs.hdfs.HadoopFileSystem;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
-import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import es.udc.gac.bigdec.kmer.Kmer;
+import es.udc.gac.bigdec.util.Configuration;
 
 import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
@@ -66,7 +66,7 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 	 */
 	public KmerCsvOutputFormat(Path outputPath) {
 		super(outputPath);
-		this.replication = DFSConfigKeys.DFS_REPLICATION_DEFAULT;
+		this.replication = Configuration.DFS_REPLICATION_DEFAULT;
 		this.charsetName = null;
 	}
 
@@ -155,7 +155,7 @@ public class KmerCsvOutputFormat extends FileOutputFormat<Tuple2<Kmer,Integer>> 
 			if (wFS instanceof HadoopFileSystem) {
 				HadoopFileSystem dFS = ((HadoopFileSystem) wFS);
 				org.apache.hadoop.conf.Configuration hadoopConfig = dFS.getHadoopFileSystem().getConf();
-				long blockSize = hadoopConfig.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT);
+				long blockSize = hadoopConfig.getLong(Configuration.DFS_BLOCK_SIZE_KEY, Configuration.DFS_BLOCK_SIZE_DEFAULT);
 				int bufferSize = hadoopConfig.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY, CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT);
 				logger.info("HDFS options: bufferSize {}, blockSize {}, replication {}", bufferSize, blockSize, replication);
 
