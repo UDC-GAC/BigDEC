@@ -20,7 +20,6 @@ package es.udc.gac.bigdec.sequence;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 public class Sequence implements Serializable {
 
