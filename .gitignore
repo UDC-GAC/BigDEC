@@ -21,6 +21,7 @@ hs_err_pid*
 *.fasta
 *.fq
 *.fa
+tests/
 target/classes/
 target/maven-archiver/
 target/maven-status/
