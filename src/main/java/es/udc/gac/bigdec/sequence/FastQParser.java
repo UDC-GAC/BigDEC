@@ -36,7 +36,7 @@ public class FastQParser implements SequenceParser {
 
 		// Read the sequence bases
 		if (!(offset < length)) {
-			String read = new String(bytes, offset, length, StandardCharsets.US_ASCII);
+			String read = new String(bytes, 0, length, StandardCharsets.US_ASCII);
 			throw new IllegalArgumentException("Wrong Sequence format for " + read
 					+ ": only name available");
 		}
@@ -47,7 +47,7 @@ public class FastQParser implements SequenceParser {
 
 		// Read the qualities
 		if (!(offset < length)) {
-			String read = new String(bytes, offset, length, StandardCharsets.US_ASCII);
+			String read = new String(bytes, 0, length, StandardCharsets.US_ASCII);
 			throw new IllegalArgumentException("Wrong Sequence format for " + read
 					+ ": no qualities available");
 		}
