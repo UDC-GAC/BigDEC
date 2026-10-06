@@ -107,6 +107,8 @@ As mentioned before, additional BigDEC settings can be set through the *config.p
 * **KMER_THRESHOLD (int)**. Minimum occurrences for solid k-mers. This value is automatically calculated when set to 0, which is the default value.
 * **KEEP_ORDER (boolean)**. Whether to force to keep output sequences in the same input order. The default value is true.
 * **MULTITHREAD_MERGE (boolean)**. Whether to launch multiple threads when merging output files to improve performance. This setting is only relevant when multiple correction algorithms are executed and/or when correcting paired-end datasets. The default value is true.
+* **SPARK_API (string)**. Spark API used to process the datasets. Supported values: RDD, Dataset. The default value is Dataset.
+* **FLINK_API (string)**. Flink API used to process the datasets. Supported values: Dataset, Datastream. The default value is Datastream.
 * **HDFS_DELETE_TEMP_FILES (boolean)**. Delete the intermediate files created by BigDEC on HDFS (if any). The default value is false.
 * **HDFS_BLOCK_REPLICATION (int)**. HDFS block replication factor for output files. The default value is 1.
 
