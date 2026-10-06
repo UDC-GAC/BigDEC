@@ -73,7 +73,13 @@ public class RunMerge extends Configured implements Tool {
 
 	public static List<Path> getFiles(FileSystem srcFS, Path srcDir, boolean sort) throws FileNotFoundException, IOException {
 
-		if (!srcFS.getFileStatus(srcDir).isDirectory())
+		FileStatus srcStatus = srcFS.getFileStatus(srcDir);
+
+		// Flink writes a single file instead of a directory when the parallelism is 1
+		if (srcStatus.isFile())
+			return new ArrayList<Path>(Arrays.asList(srcDir));
+
+		if (!srcStatus.isDirectory())
 			throw new IOException("Input source path is not a directory");
 
 		List<FileStatus> contents = new ArrayList<FileStatus>(Arrays.asList(srcFS.listStatus(srcDir)));

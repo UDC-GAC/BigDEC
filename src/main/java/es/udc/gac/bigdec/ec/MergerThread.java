@@ -361,7 +361,10 @@ public class MergerThread extends Thread {
 			filesToProcess.clear();
 
 			// Create input paths
-			if (!reverse) {
+			if (outputFiles == 1) {
+				// Flink writes a single file instead of a directory when the parallelism is 1
+				filesToProcess.add(inputPath);
+			} else if (!reverse) {
 				for (int i = firstFileNumber; i <= outputFiles; i++)
 					filesToProcess.add(new Path(inputPath+Configuration.SLASH+i));
 			} else {
