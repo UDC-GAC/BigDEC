@@ -102,7 +102,7 @@ BLESS2_MAX_KMER_THRESHOLD=255
 BLESS2_MAX_EXTEND=5
 
 # Turn trimming on/off
-BLESS2_TRIMMING=false
+BLESS2_TRIMMING=true
 
 # Maximum number of bases that can trimmed in a single
 # read, expressed as a ratio of its total length

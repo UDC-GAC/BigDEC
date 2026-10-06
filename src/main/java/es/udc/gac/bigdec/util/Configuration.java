@@ -116,7 +116,7 @@ public final class Configuration {
 	public Boolean SPARK_COMPRESS_DATA = false;
 	public String SPARK_COMPRESSION_CODEC = "lz4";
 	public Integer SPARK_SHUFFLE_PARTITIONS = 1;
-	public String FLINK_API = "Dataset";
+	public String FLINK_API = "Datastream";
 	public Boolean FLINK_OBJECT_REUSE = true;
 	public Boolean FLINK_MULTIPLE_JOB = true;
 	public Boolean FLINK_WRITE_KMERS = false;
