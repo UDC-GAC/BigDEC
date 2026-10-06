@@ -147,10 +147,10 @@ public class MergerThread extends Thread {
 				break;
 			} catch (InterruptedException ie) {
 				running.set(false);
-				throw new RuntimeException(ie.getMessage());
+				throw new RuntimeException(ie);
 			} catch (IOException ioe) {
 				running.set(false);
-				throw new RuntimeException(ioe.getMessage());
+				throw new RuntimeException(ioe);
 			}
 		}
 
