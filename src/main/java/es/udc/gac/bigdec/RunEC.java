@@ -184,6 +184,8 @@ public class RunEC {
 					}
 				}
 			} catch (FileNotFoundException e) {
+				// Output path does not exist yet: no output files to count
+				logger.debug("Output path {} not found", outputPath);
 			}
 
 			logger.debug("outputFileCount = {}", outputFileCount);
