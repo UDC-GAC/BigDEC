@@ -204,19 +204,22 @@ public class CLIOptions {
 	public void parse(String[] args) {
 		boolean inputFile = false;
 
-		try {
-			CommandLine cmd = parser.parse(this.options, args, false);
-
-			if (cmd.hasOption("h")) {
+		// Handle help and version first, since the input options are compulsory
+		for (String arg : args) {
+			if (arg.equals("-h") || arg.equals("--help")) {
 				printUsage();
 				System.exit(0);
 			}
 
-			if (cmd.hasOption("v")) {
+			if (arg.equals("-v") || arg.equals("--version")) {
 				System.out.print("\n"+RunEC.APP_NAME+" "+Configuration.VERSION);
 				System.out.print(footer);
 				System.exit(0);
 			}
+		}
+
+		try {
+			CommandLine cmd = parser.parse(this.options, args, false);
 
 			if (cmd.hasOption("s")) {
 				paired = false;
