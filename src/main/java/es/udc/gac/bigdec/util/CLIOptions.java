@@ -209,13 +209,13 @@ public class CLIOptions {
 
 			if (cmd.hasOption("h")) {
 				printUsage();
-				System.exit(-1);
+				System.exit(0);
 			}
 
 			if (cmd.hasOption("v")) {
 				System.out.print("\n"+RunEC.APP_NAME+" "+Configuration.VERSION);
 				System.out.print(footer);
-				System.exit(-1);
+				System.exit(0);
 			}
 
 			if (cmd.hasOption("s")) {
